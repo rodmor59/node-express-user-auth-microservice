@@ -1,0 +1,32 @@
+{
+  "name": "node-rest-api-usr-auth",
+  "version": "1.0.0",
+  "description": "Node.js REST/API Microservice for managing user authorizations, including sign-up, sign-in, user edit and delete, password reset and token validation.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "test"
+  },
+  "keywords": [
+    "Node",
+    "express",
+    "REST",
+    "API",
+    "user",
+    "authorization",
+    "passport",
+    "jest"
+  ],
+  "author": "Ricardo Rodriguez",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0",
+    "nodemon": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.49.0"
+  }
+}
