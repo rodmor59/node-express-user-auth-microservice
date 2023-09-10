@@ -11,6 +11,15 @@ module.exports.userStatus = {
 }
 
 /*
+Response status text.
+Text to use when notifying the client about the estatus of their operation in text.
+*/
+module.exports.statusTxt = {
+    statusFailed: 'Failed',
+    statusCompleted: 'Success'
+}
+
+/*
 General messages
 */
 module.exports.messages = {

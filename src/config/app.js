@@ -5,7 +5,11 @@ module.exports.customCors = function (req, res, next) {
     next()
 }
 
-// Custom function for Error Handling
+/* Custom function for Error Handling
+They handle errors raised by the handlers functions
+This customErrorHandler sits in the pipeline after the handlers themselves and is called using next in the event
+of unexpected error (and error that is not handled by the handlers themselves)
+*/
 module.exports.customErrorHandler = function ({error, message}, request, response) {
     // Error handling middleware functionality
     console.log(`error ${error.message}`)
