@@ -4,7 +4,7 @@ const appParameters = require('../config/parameters')
 //---- sign up user
 module.exports.signUp = async function (req, res, next) {
     try {
-        //Destructure the request
+        //Destructure the request body
         const userData = {
             email: req.body.email,
             password: req.body.password,
