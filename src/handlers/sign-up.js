@@ -17,10 +17,7 @@ module.exports.signUp = async function (req, res, next) {
         const usrSignUpResult = await signUpSrv.signUp(userData)
 
         //Send the response
-        res.status(usrSignUpResult.status).json({
-            message: usrSignUpResult.message,
-            payload: usrSignUpResult.payload
-        })
+        res.status(usrSignUpResult.httpStatusCode).json(usrSignUpResult.payload)
     }
     catch (error) {
         console.error(error)

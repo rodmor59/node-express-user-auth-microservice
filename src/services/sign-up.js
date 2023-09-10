@@ -1,6 +1,6 @@
 const encryptPwd = require('../utils/encrypt-pwd')
 const userDBService = require('./dbservices/user')
-const appParameters = require('../config/parameters')
+const { statusTxt, userStatus } = require('../config/parameters')
 
 //Error messages
 const errMsgDuplicateEmail = 'There is another user with the specified email'
@@ -13,9 +13,12 @@ module.exports.signUp = async (userData) => {
     const user = await userDBService.findOneByEmail(userData.email)
     if (user !== null) {
         return {
-            success: false,
-            status: 409,
-            message: errMsgDuplicateEmail
+            success: false, //Notify the caller that the function was not successful
+            httpStatusCode: 409, //Notify the caller why the function was not successful in the form of an httpErrorCode that it can pass to the client
+            payload: { //Data that will ultimately be sent to the client
+                status: statusTxt.statusFailed,
+                message: errMsgDuplicateEmail
+            }
         }
     }
 
@@ -26,7 +29,7 @@ module.exports.signUp = async (userData) => {
     //Create the new user
     const newRegUser = await userDBService.create({
         ...userData,
-        status: appParameters.userStatus.enabled,
+        status: userStatus.enabled,
         failedLoginAttempts: 0,
         lastAccessDate: nowDate,
         lastSuccessfulLoginDate: null
@@ -36,9 +39,12 @@ module.exports.signUp = async (userData) => {
 
     //Success response
     return {
-        success: true,
-        status: 200,
-        message: successMsgSignUp,
-        payload: {newRegUserId: newRegUser._id}
+        success: true, //Notify the caller that the function was successful
+        httpStatusCode: 200, //Give the caller the http response code to send to the client
+        payload: { //Data that will ultimately be sent to the client
+            status: statusTxt.statusCompleted,
+            message: successMsgSignUp,
+            newUserId: newRegUser._id
+        }
     }
 }
