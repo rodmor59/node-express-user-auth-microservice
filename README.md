@@ -189,7 +189,7 @@ npm run test
 
 Project is: Complete. 
 
-I am open to suggestions on how to improve with better coding and architecting practices, while preserving the project aim and tech stack
+Feel free to make suggestions on how to improve the project.
 
 <!--
 (#contact-me)
@@ -197,7 +197,7 @@ I am open to suggestions on how to improve with better coding and architecting p
 
 ## Contact
 
-Created by **Ricardo Rodriguez** - feel free to contact me on the following links:
+Created by **Ricardo Rodriguez** - contact me on the following links:
 
 [![Ricardo's Github Profile](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rodmor59)
 [![Ricardo's Linkedin Profile](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ricartrodrig)
