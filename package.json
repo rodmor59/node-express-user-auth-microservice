@@ -9,13 +9,16 @@
   },
   "keywords": [
     "Node",
-    "express",
+    "Express",
+    "MongoDB",
     "REST",
     "API",
-    "user",
-    "authorization",
-    "passport",
-    "jest"
+    "Mongoose",
+    "Jest",
+    "joi",
+    "bcrypt",
+    "supertest",
+    "eslint"
   ],
   "author": "Ricardo Rodriguez",
   "license": "MIT",
