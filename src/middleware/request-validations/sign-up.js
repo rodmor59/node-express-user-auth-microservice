@@ -1,4 +1,4 @@
-const Validators = require('../../utils/validators/sign-up-req-schema')
+const Validators = require('../../utils/validators/validate-req-sign-up')
 const sendError = require('../../utils/res-error')
 const { statusTxt } = require('../../config/parameters')
 

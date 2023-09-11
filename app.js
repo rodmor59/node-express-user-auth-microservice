@@ -5,9 +5,12 @@ It import the app (which is in a separate file) and assign an HTTP server to it.
 
 //Load envirorment variables
 require('dotenv').config()
-
-const app = require('./src/app')
 const port = process.env.APP_PORT
+const { connectDB } = require('./src/config/database')
+const app = require('./src/app')
+
+//Connect to database
+connectDB()
 
 //Start server
 app.listen(port, () => {
