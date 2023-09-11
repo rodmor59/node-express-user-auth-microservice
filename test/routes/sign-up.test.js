@@ -3,7 +3,7 @@ const supertest = require('supertest')
 
 // Load environment variables
 require('dotenv').config()
-const app = require('../src/app')
+const app = require('../../src/app')
 const UserModel = mongoose.model('User') //For preparing and deleting test data directly in the DB
 
 //URL Routes constants
