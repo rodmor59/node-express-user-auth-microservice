@@ -8,15 +8,6 @@ const errMsgPwdDoesNotContainSpecialChar = 'password must contain at least one s
 //Regex patter for validating names. Can contain letters, numbers, Á-ú and Ä-ü special and blank spaces
 module.exports.nameRegex = /^[A-Za-z0-9Á-úÄ-ü ']+$/
 
-//Name format check (First names and last names) can contain numbers
-module.exports.nameHasError = (name) => {
-    let re = /^[A-Za-z0-9Á-úÄ-ü ']+$/
-    if (!re.test(name)) {
-        return errMsgInvalidName
-    }
-    return false
-}
-
 /*Regex patter for validating passwords
     passwords must contain at least:
     - One number
@@ -26,6 +17,14 @@ module.exports.nameHasError = (name) => {
 */
 module.exports.pwdRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[`!@#%$&^*()])[A-Za-z0-9`!@#%$&^*()]+$/
 
+//Name format check (First names and last names) can contain numbers
+module.exports.nameHasError = (name) => {
+    let re = /^[A-Za-z0-9Á-úÄ-ü ']+$/
+    if (!re.test(name)) {
+        return errMsgInvalidName
+    }
+    return false
+}
 // password format check
 module.exports.passwordHasError = (pwd) => {
     // at least one numeric value

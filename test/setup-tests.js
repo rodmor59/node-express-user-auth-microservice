@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+// Load environment variables
+require('dotenv').config()
 
 beforeAll(async () => {
     //await connectDB()
