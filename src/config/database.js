@@ -9,9 +9,9 @@ module.exports.registerDbModels = async () => {
     require('../models/user')
 }
 
-module.exports.connectDB = async () => {
+module.exports.connectDB = async (uri) => {
     //Connect to the database. URI is configured in the .env file
-    mongoose.connect(process.env.DB_URI)
+    mongoose.connect(uri)
 
     mongoose.connection.on('connected', () => {
         console.log(msgScsDBConnect)

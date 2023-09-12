@@ -10,7 +10,7 @@ const { connectDB } = require('./src/config/database')
 const app = require('./src/app')
 
 //Connect to database
-connectDB()
+connectDB(process.env.DB_URI)
 
 //Start server
 app.listen(port, () => {
