@@ -1,8 +1,9 @@
 const supertest = require('supertest')
 
-const app = require('../../src/app')
-const { testUserData, testDupUserData } = require('../test-data-def') //Test user data
-const { createTestUser, deleteTestUser } = require('../test-data-prep-utils') // DB Access utils for setting up test data
+const app = require('../../src/app') //The app that will be tested.
+const { signupMockData, signupDupEmailMockData } = require('../fixtures/mock-data') //Test user data
+const createUser = require('../fixtures/create-user') // Fixture
+const deleteUser = require('../teardowns/delete-user') //Teardown
 
 //URL Routes constants
 const signUpRoute = '/sign-up'
@@ -13,14 +14,15 @@ describe('POST /sign-up', () => {
 
     afterAll(async () => {
         /*
-        The following line makes sure that the test data is deleted from the DB after finishing the suite.
-        This is necessary because a test that should have rejected the request could have failed, allowing 
-        the creation of the document. Therefore it must be deleted at the end of the suite.
+        The following line executes a tear down of the signup Mock Data.
+
+        It is necessary to do it here because a test that should have rejected the request could have failed, 
+        allowing the creation of the document. Therefore it must be deleted at the end of the suite.
     
-        Test data for duplicate emails doesn't require this treatment as it is deleted within its test, regardless
-        of wether the test fails or not.
+        Mock data for successful signups and signups with duplicate emails doesn't require this treatment 
+        as their mock data is teared down within the test function.
         */
-        await deleteTestUser(testUserData.email)
+        await deleteUser(signupMockData.email)
     
     })
 
@@ -28,108 +30,108 @@ describe('POST /sign-up', () => {
     test.each([
         {
             testSignUpData: {
-                password: testUserData.password, //Test data is missing the email field
-                firstName: testUserData.firstName,
-                lastName: testUserData.lastName,
-                receiveEmails: testUserData.receiveEmails
+                password: signupMockData.password, //Test data is missing the email field
+                firstName: signupMockData.firstName,
+                lastName: signupMockData.lastName,
+                receiveEmails: signupMockData.receiveEmails
             },
             testDescription: 'Rejects when the email is missing'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 email: true //Email is set as a non string
             },
             testDescription: 'Rejects when email is not a string'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 email: 'testexample.com' //Email is set in an invalid format (doesn't have the "@" character)
             },   
             testDescription: 'Rejects when email format is invalid'
         },
         {
             testSignUpData: {
-                email: testUserData.email, //Password prop is missing
-                firstName: testUserData.firstName,
-                lastName: testUserData.lastName,
-                receiveEmails: testUserData.receiveEmails
+                email: signupMockData.email, //Password prop is missing
+                firstName: signupMockData.firstName,
+                lastName: signupMockData.lastName,
+                receiveEmails: signupMockData.receiveEmails
             },   
             testDescription: 'Rejects when password is missing'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 password: true //Password is set as a non string
             },   
             testDescription: 'Rejects when password is not a string'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 password: '123456' //Weak password
             },   
             testDescription: 'Rejects when the password format is invalid (Not strong enough)'
         },
         {
             testSignUpData: {
-                email: testUserData.email,
-                password: testUserData.password, //First name prop is missing
-                lastName: testUserData.lastName,
-                receiveEmails: testUserData.receiveEmails
+                email: signupMockData.email,
+                password: signupMockData.password, //First name prop is missing
+                lastName: signupMockData.lastName,
+                receiveEmails: signupMockData.receiveEmails
             },   
             testDescription: 'Rejects when the first name is missing'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 firstName: true, //First name prop is set to a non-string value
             },   
             testDescription: 'Rejects when the first name is not a string'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 firstName: 'R*ich*ar~d==++', //First name is set to contain invalid characters for a name
             },   
             testDescription: 'Rejects when the first name format is invalid'
         },
         {
             testSignUpData: {
-                email: testUserData.email,
-                password: testUserData.password,
-                firstName: testUserData.firstName, //Last name prop is missing
-                receiveEmails: testUserData.receiveEmails
+                email: signupMockData.email,
+                password: signupMockData.password,
+                firstName: signupMockData.firstName, //Last name prop is missing
+                receiveEmails: signupMockData.receiveEmails
             },   
             testDescription: 'Rejects when the the last name is missing'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 lastName: true, //Last name prop set to a non-string value
             },   
             testDescription: 'Rejects when the last name is not a string'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 lastName: 'B*r~o123wn', //Last name prop set to include invalid characters for a name
             },   
             testDescription: 'Rejects when the last name format is invalid'
         },
         {
             testSignUpData: {
-                email: testUserData.email,
-                password: testUserData.password,
-                firstName: testUserData.firstName,
-                lastName: testUserData.lastName, //receiveEmails prop is missing
+                email: signupMockData.email,
+                password: signupMockData.password,
+                firstName: signupMockData.firstName,
+                lastName: signupMockData.lastName, //receiveEmails prop is missing
             },   
             testDescription: 'Rejects when the field "receiveEmails" is missing'
         },
         {
             testSignUpData: {
-                ...testUserData,
+                ...signupMockData,
                 receiveEmails: 'Not a boolean' //receiveEmails prop set to a non-boolean value
             },   
             testDescription: 'Rejects when the field "receiveEmails" is not a boolean'
@@ -150,7 +152,7 @@ describe('POST /sign-up', () => {
 
         const response = await supertest(app)
             .post(signUpRoute)
-            .send(testUserData)
+            .send(signupMockData)
 
         expect(response.status).toBe(200) //Expects an Ok http response
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -160,17 +162,21 @@ describe('POST /sign-up', () => {
         })
 
         // Cleanup test data created by the signup process. If the test fails this is not necessary (and doesn't execute because test is interrupted at error)
-        await deleteTestUser(testUserData.email)
+        await deleteUser(signupMockData.email)
     })
 
     test('Rejects when there is another user with the same email', async () => {
         try {
-            //Data preparation steps (Insert testSignUpData directly into the db)
-            await createTestUser(testDupUserData)
+            /*
+            Fixture steps (Insert testSignUpData directly into the db)*
+            Note: Password is inserted without encryption but that is not relevant for this test as it validates
+            duplicate email only.
+            */
+            await createUser(signupDupEmailMockData)
             
             const response = await supertest(app)
                 .post(signUpRoute)
-                .send(testDupUserData)
+                .send(signupDupEmailMockData)
 
             expect(response.status).toBe(409) //Http status code "Conflict"
             expect(response.body).toMatchObject({ //This assertion varifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -179,8 +185,8 @@ describe('POST /sign-up', () => {
             })
         }
         finally {
-            // Cleanup test data preparations regardless of test result
-            await deleteTestUser(testDupUserData.email)
+            // Teardown Mock data regardless of test result
+            await deleteUser(signupDupEmailMockData.email)
         }
     })
 })

@@ -3,7 +3,7 @@ const UserModel = mongoose.model('User') //For preparing and deleting test data 
 
 const tstSignUpUsrStatus = 'test'
 
-module.exports.createTestUser = async (signUpdata) => {
+const createUser = async (signUpdata) => {
     //Data preparation steps (Insert testSignUpData directly into the db)
     await UserModel.create({
         ...signUpdata,
@@ -14,6 +14,5 @@ module.exports.createTestUser = async (signUpdata) => {
     })
 }
 
-module.exports.deleteTestUser = async (testEmail) => {
-    await UserModel.deleteOne({ email: testEmail })
-}
+//Default export
+module.exports = createUser
