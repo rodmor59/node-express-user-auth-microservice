@@ -1,8 +1,8 @@
-const signUpSrv = require('../services/sign-up')
+const signupSrv = require('../services/sign-up')
 const appParameters = require('../config/parameters')
 
 //---- sign up user
-module.exports.signUp = async function (req, res, next) {
+module.exports.signup = async function (req, res, next) {
     try {
         //Destructure the request body
         const userData = {
@@ -14,7 +14,7 @@ module.exports.signUp = async function (req, res, next) {
         }
 
         //Call the Sign Up Service
-        const usrSignUpResult = await signUpSrv.signUp(userData)
+        const usrSignUpResult = await signupSrv.signup(userData)
 
         //Send the response
         res.status(usrSignUpResult.httpStatusCode).json(usrSignUpResult.payload)

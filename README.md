@@ -171,45 +171,47 @@ npm run test
 ## Project Architecture and Folder Structure
 
 ```
-.
-├── src
-│   ├── config
-│   │   ├── app.js
-│   │   ├── dabase.js
-│   │   └── parameters.js
-│   ├── handlers
-│   │   └── sign-up.js
-│   ├── middleware
-│   │   └── request-validations
-│   │       └── sign-up.js
-│   ├── models
-│   │   └── user.js
-│   ├── routes
-│   │   └── sign-up.js
-│   ├── services
-│   │   ├── dbservices
-│   │   │   └── user.js
-│   │   └── sign-up.js
-│   ├── utils
-│   │   ├── validators
-│   │   │   ├── validate-req-sign-up.js
-│   │   │   └── validate-str-formats.js
-│   │   ├── encrypt-pwd.js
-│   │   └── res-error.js
-│   └── app.js
-├── test
-│   ├── routes
-│   │   └── sign-up.test.js
-│   └── setupTests.js
-├── .env.template
-├── .eslintrc.json
-├── app.js
-├── jest.config.js
-├── LICENSE
-├── package-lock.json
-├── package.json
-└── README.md
-
+[src]
+    ├── app.js
+    ├── [config]
+        ├── app.js
+        ├── database.js
+        └── parameters.js
+    ├── [handlers]
+        └── sign-up.js
+    ├── [middleware]
+        └── [request-validations]
+            └── sign-up.js
+    ├── [models]
+        └── user.js
+    ├── [services]
+        ├── [dbservices]
+            └── user.js
+        └── sign-up.js
+    └── [utils]
+        ├── encrypt-pwd.js
+        ├── res-error.js
+        └── [validators]
+            ├── validate-req-sign-up.js
+            └── validate-str-formats.js
+[test]
+    ├── [fixtures]
+        ├── create-user.js
+        └── mock-data.js
+    ├── [setup]
+        └── setup-tests.js
+    ├── [teardowns]
+        └── delete-user.js
+    └── [test-end-to-end]
+        └── sign-up.test.js
+.env.template
+.eslintrc.json
+app.js
+jest.config.js
+LICENSE
+package-lock.json
+package.json
+README.md
 ```
 
 <!--
