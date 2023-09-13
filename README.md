@@ -1,8 +1,7 @@
 # Node.js Express User Authorization Microservice
-Welcome to the Node.js Express User Authorization Microservice! This project is a work in progress and it will include
-the complete functionality for managing user access, including: Signup, signin, user edit and delete, authorization check and password reset.
+Welcome to the Node.js Express User Authorization Microservice! This project is a work in progress. Once completed, it will provide comprehensive functionality for managing user access, including signup, sign-in, user profile editing and deletion, authorization checks, and password reset. 
 
-Feel free to explore the code and don't hesitate to reach out with any questions or feedback you may have!
+Stay tuned for updates as we continue to enhance and refine this microservice. Also, feel free to explore the code and don't hesitate to reach out with any questions or feedback you may have!
 
 <!--
 (#table-of-contents)
@@ -28,11 +27,11 @@ Feel free to explore the code and don't hesitate to reach out with any questions
 
 This project aims to:
 
-* Showcase how to develop a basic RESTful API using Node.js and Express.
-* Demonstrate industry-standard project organization practices, emphasizing separation of concerns, modularity, and code reusability.
-* Provide a learning resource for developing RESTful APIs, facilitating getting started with Node, Express and Jest.
-* Provide a clear example of a project structure, an API endpoint and its tests.
-* Offer a standardized project structure as a starting point for more complex API developments, saving time and effort.
+* Provide a standard Node.js Express microservice with a comprehensive set of features for managing user access.
+* Address the common need for user authentication in almost all applications, following industry-standard project organization practices, emphasizing separation of concerns, modularity, and code reusability.
+* Save developers time and effort by eliminating the need to develop user authentication from scratch. Developers can simply clone or fork this repository and integrate it into their projects.
+* Serve as a learning resource for developing RESTful APIs to manage user authentication, incorporating cutting-edge technologies such as password encryption, Jason Web Tokens (JWT), and Passport.js authentication.
+* Provide guidance on developing automated procedures for user signup, sign-in, account confirmation, password resets (Forgot password) through email, and more.
 
 <!--
 (#features)
