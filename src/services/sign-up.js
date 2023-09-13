@@ -7,7 +7,7 @@ const errMsgDuplicateEmail = 'There is another user with the specified email'
 const successMsgSignUp = 'New user signed up successfully'
 
 //---- sign up user Service
-module.exports.signUp = async (userData) => {
+module.exports.signup = async (userData) => {
 
     //Check that the email the new user has sent is not taken
     const user = await userDBService.findOneByEmail(userData.email)

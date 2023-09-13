@@ -14,6 +14,7 @@ registerDbModels()
 
 //Routes
 app.use(require('./routes/sign-up'))
+app.use(require('./routes/sign-in'))
 
 //Setup custom error handler from the app configuration
 app.use(customErrorHandler)
