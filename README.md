@@ -1,5 +1,6 @@
-# Node.js Express REST API Demo and Starter
-Welcome to the Node.js Express REST API demo repository! This project showcases how to develo a basic RESTful API using Node.js, Express, and Jest. It provides a standardized project structure, an example endpoint, and it's corresponding Jest tests, serving as a valuable resource for learning and kickstarting the development of more complex RESTful APIs.
+# Node.js Express User Authorization Microservice
+Welcome to the Node.js Express User Authorization Microservice! This project is a work in progress and it will include
+the complete functionality for managing user access, including: Signup, signin, user edit and delete, authorization check and password reset.
 
 Feel free to explore the code and don't hesitate to reach out with any questions or feedback you may have!
 
@@ -10,7 +11,8 @@ Feel free to explore the code and don't hesitate to reach out with any questions
 ## Table of Contents
 
 * [About this Project](#about-this-project)
-* [Features](#features)
+* [Completed Features](#completed-features)
+* [Planned Features](#planned-features)
 * [Technologies](#technologies)
 * [Setup](#setup)
 * [Usage](#usage)
@@ -36,14 +38,44 @@ This project aims to:
 (#features)
 -->
 
-## Features
+## Completed Features
 
-*A fully functional demo endpoint (sign-up) that receives data for a new user, encrypts his password and saves the document to the database. The endpoint follows a route, handler, service, and DB service structure.
-* Middleware function that uses schemas to validate data received in the request. This function executes as middleware before the route handler.
-* The database configuration, modeling and access functionality are encapsulated and separated from other programming logic.
-* Password encryption utility function for the demo endpoint.
+### Endpoints
+
+* Signup.
+
+### Technical features
+
+* Password encryption.
+* Schama based request data validation with middleware functions that execute before handlers.
+* The endpoints follows a route, handler, service, and DB service structure.
+* Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
 * Environment variables file segregated from the API Source code.
 * Testing configuration and tests with Jest. It also includes HTTP server testing with the "supertest" library.
+
+<!--
+(#Planned Features)
+-->
+
+## Planned Features
+
+### Endpoints
+
+* Signup email confirmation.
+* Signup resend email confirmation.
+* Signin (Login)
+* Get user data.
+* Edit user data.
+* Delete user.
+* Change password.
+* Autorization check (Token validation).
+* Password send reset code.
+* Password reset.
+
+### Technical features
+
+* Issuing of JWT Tokens at user signup.
+* Route protection with Passport, with a JWT token strategy. All routes except user signup will be protected.
 
 <!--
 (#tech-stack-used)
@@ -187,7 +219,7 @@ npm run test
 
 ## Project Status
 
-Project is: Complete. 
+Project is: In Progress. 
 
 Feel free to make suggestions on how to improve the project.
 
