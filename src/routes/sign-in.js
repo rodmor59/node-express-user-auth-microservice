@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const ReqValidations = require('../middleware/request-validations/sign-in')
-//const signUpHandler = require('../handlers/sign-up')
+const signinHandler = require('../handlers/sign-in')
 
 console.log('Sign in routes loaded')
 
@@ -9,7 +9,7 @@ console.log('Sign in routes loaded')
 router.post(
     '/sign-in', 
     ReqValidations.validateSigninFields,
-    //signUpHandler.signUp
+    signinHandler.signin
 )
 
 module.exports = router

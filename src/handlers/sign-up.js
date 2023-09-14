@@ -14,10 +14,10 @@ module.exports.signup = async function (req, res, next) {
         }
 
         //Call the Sign Up Service
-        const usrSignUpResult = await signupSrv.signup(userData)
+        const usrSignupResult = await signupSrv.signup(userData)
 
         //Send the response
-        res.status(usrSignUpResult.httpStatusCode).json(usrSignUpResult.payload)
+        res.status(usrSignupResult.httpStatusCode).json(usrSignupResult.payload)
     }
     catch (error) {
         console.error(error)
