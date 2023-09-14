@@ -42,10 +42,12 @@ This project aims to:
 ### Endpoints
 
 * Signup.
+* Signin (Login)
 
 ### Technical features
 
 * Password encryption.
+* Sigin and issue of JWT Tokens at user login.
 * Schama based request data validation with middleware functions that execute before handlers.
 * The endpoints follows a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
@@ -62,7 +64,6 @@ This project aims to:
 
 * Signup email confirmation.
 * Signup resend email confirmation.
-* Signin (Login)
 * Get user data.
 * Edit user data.
 * Delete user.
@@ -73,7 +74,6 @@ This project aims to:
 
 ### Technical features
 
-* Issuing of JWT Tokens at user signup.
 * Route protection with Passport, with a JWT token strategy. All routes except user signup will be protected.
 
 <!--
@@ -91,10 +91,11 @@ This project aims to:
 
 ### Libraries
 
-- **Mongoose:** Used for modeling and interacting with MongoDB databases.
+- **jsonwebtoken:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user signin, after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
+- **bcrypt:** Hashing passwords securely in JavaScript (Used in this project at user signup).
 - **Joi:** Schema validation library for enforcing constraints on JavaScript objects. Used to apply data validations ass middleware, before executing route handlers.
+- **Mongoose:** Used for modeling and interacting with MongoDB databases.
 - **dotenv:** Loading environment variables from a .env file in Node.js applications. (The Database URI is loaded this way)
-- **bcrypt:** Hashing passwords securely in JavaScript. (Used in the signup example endpoint)
 - **Supertest:** Testing Node.js HTTP servers by making HTTP requests and asserting responses, withput having to start an http server (Used in conjunction with Jest for testing)
 - **esLint:** JavaScript linter for identifying code quality issues and enforcing coding standards. Used to stream software development.
 
@@ -144,6 +145,9 @@ Local MongoDB URL:
 Cloud Atlas MongoDB URI:  
 `mongodb+srv://<Cloud Atlas database username>:<Cloud Atlas database password@appcluster0.ckkhqvp.mongodb.net/<Name of the database>?retryWrites=true&w=majority`
 
+**`JWT_SECRET_SIGNIN`**
+Random hex secret key required to issue the JWT Tokens for user signin (64 characters or more recommended).
+
 This project includes a .env.template file that you may fill and then rename to .env.
 
 <!--
@@ -171,39 +175,6 @@ npm run test
 ## Project Architecture and Folder Structure
 
 ```
-[src]
-    ├── app.js
-    ├── [config]
-        ├── app.js
-        ├── database.js
-        └── parameters.js
-    ├── [handlers]
-        └── sign-up.js
-    ├── [middleware]
-        └── [request-validations]
-            └── sign-up.js
-    ├── [models]
-        └── user.js
-    ├── [services]
-        ├── [dbservices]
-            └── user.js
-        └── sign-up.js
-    └── [utils]
-        ├── encrypt-pwd.js
-        ├── res-error.js
-        └── [validators]
-            ├── validate-req-sign-up.js
-            └── validate-str-formats.js
-[test]
-    ├── [fixtures]
-        ├── create-user.js
-        └── mock-data.js
-    ├── [setup]
-        └── setup-tests.js
-    ├── [teardowns]
-        └── delete-user.js
-    └── [test-end-to-end]
-        └── sign-up.test.js
 .env.template
 .eslintrc.json
 app.js
@@ -212,6 +183,50 @@ LICENSE
 package-lock.json
 package.json
 README.md
+[src]
+    ├── app.js
+    ├── [config]
+        ├── app.js
+        ├── database.js
+        └── parameters.js
+    ├── [handlers]
+        ├── sign-in.js
+        └── sign-up.js
+    ├── [middleware]
+        └── [request-validations]
+            ├── sign-in.js
+            └── sign-up.js
+    ├── [models]
+        └── user.js
+    ├── [services]
+        ├── [dbservices]
+            └── user.js
+        ├── sign-in.js
+        └── sign-up.js
+    └── [utils]
+        ├── check-password.js
+        ├── encrypt-pwd.js
+        ├── res-error.js
+        ├── user-dates-update.js
+        └── [validators]
+            ├── validate-req-sign-in.js
+            ├── validate-req-sign-up.js
+            └── validate-str-formats.js
+[test]
+    ├── [fixtures]
+        ├── create-signed-up-user.js
+        ├── create-user.js
+        └── mock-data.js
+    ├── [setup]
+        ├── parameters.js
+        └── setup-tests.js
+    ├── [teardowns]
+        └── delete-user.js
+    ├── [test-end-to-end]
+        ├── sign-in.test.js
+        └── sign-up.test.js
+    └── [utils]
+        └── verif-db-id-type.js
 ```
 
 <!--
