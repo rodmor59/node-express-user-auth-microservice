@@ -1,9 +1,6 @@
-const jwt = require('jsonwebtoken')
-
 const userDBService = require('./dbservices/user')
 const { customHttpResponseCodes,
     numWrongPwdAttemptsToLockUser,
-    signinTokenOptions,
     statusTxt,
     userStatus
 } = require('../config/parameters')
@@ -18,8 +15,8 @@ const errMsgUserNotEnabled = 'User is in a not-enabled status'
 const errMsgWrongPwd = 'Incorrect password'
 const successMsgSignin = 'User signed in successfully'
 
-//---- sign in user Service
-module.exports.signin = async (email, password) => {
+//---- service that authenticate users checking username, password and if the user is not locked
+module.exports.authentication = async (email, password) => {
 
     //Check that there is a user with the specified email
     const user = await userDBService.findOneByEmail(email)
@@ -97,9 +94,6 @@ module.exports.signin = async (email, password) => {
     user.failedLoginAttempts
     user.save() //Save changes to user
 
-    //Generate the JWT token
-    const signinToken = `Bearer ${jwt.sign({ userId: user._id }, process.env.JWT_SECRET_SIGNIN, signinTokenOptions)}` //Obtiene frase generadora de token de las variables de entorno
-
     //Sucess!
     return {
         success: true, //Notify the caller that the function was successful
@@ -107,7 +101,6 @@ module.exports.signin = async (email, password) => {
         payload: { //Data that will ultimately be sent to the client
             status: statusTxt.statusCompleted,
             message: successMsgSignin,
-            signinToken: signinToken, 
             userInfo: { _id: user._id }
         }
     }

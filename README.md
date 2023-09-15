@@ -47,7 +47,7 @@ This project aims to:
 ### Technical features
 
 * Password encryption.
-* Sigin and issue of JWT Tokens at user login.
+* Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client send login and password once. Then, they can use the token for authentication until it expires).
 * Schama based request data validation with middleware functions that execute before handlers.
 * The endpoints follows a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
@@ -74,7 +74,7 @@ This project aims to:
 
 ### Technical features
 
-* Route protection with Passport, with a JWT token strategy. All routes except user signup will be protected.
+* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
 
 <!--
 (#tech-stack-used)
@@ -87,10 +87,16 @@ This project aims to:
 ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Express.js](https://img.shields.io/badge/Express%20js-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node%20js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+
+### Tools and Libraries
+
 ![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
+![EsLint](	https://img.shields.io/badge/eslint-3A33D1?style=for-the-badge&logo=eslint&logoColor=white)
 
-### Libraries
+### Libraries Description
 
+- **passport**: Flexible and modular authentication middleware for Node.js that provides a simple and customizable way to handle user authentication in web applications. This project uses a local strategy for user signin which sends a JWT token to the client. Aftewards, a JWT strategy is used to authenticate users with a valid signin JWT Token.
 - **jsonwebtoken:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user signin, after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
 - **bcrypt:** Hashing passwords securely in JavaScript (Used in this project at user signup).
 - **Joi:** Schema validation library for enforcing constraints on JavaScript objects. Used to apply data validations ass middleware, before executing route handlers.
@@ -175,7 +181,6 @@ npm run test
 ## Project Architecture and Folder Structure
 
 ```
-.env.template
 .eslintrc.json
 app.js
 jest.config.js
@@ -188,11 +193,14 @@ README.md
     ├── [config]
         ├── app.js
         ├── database.js
-        └── parameters.js
+        ├── parameters.js
+        ├── passport-config.js
+        └── passport-strategies.js
     ├── [handlers]
-        ├── sign-in.js
+        ├── sign-in-success.js
         └── sign-up.js
     ├── [middleware]
+        ├── auth.js
         └── [request-validations]
             ├── sign-in.js
             └── sign-up.js
@@ -201,12 +209,13 @@ README.md
     ├── [services]
         ├── [dbservices]
             └── user.js
-        ├── sign-in.js
+        ├── sign-in-auth.js
         └── sign-up.js
     └── [utils]
         ├── check-password.js
         ├── encrypt-pwd.js
         ├── res-error.js
+        ├── sign-jwt-token.js
         ├── user-dates-update.js
         └── [validators]
             ├── validate-req-sign-in.js

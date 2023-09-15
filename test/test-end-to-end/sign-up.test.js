@@ -13,6 +13,17 @@ const signupRoute = '/sign-up'
 
 describe('POST /sign-up', () => {
 
+    beforeAll(async () => {
+        /*
+        Cleanup Mock data that may have not been deleted in previous test executions due to test interruption, otherwise
+        there could be duplicate key errors
+        */
+        await Promise.all([
+            deleteUser(signupMockData.email),
+            deleteUser(signupDupEmailMockData.email)
+        ])
+    })
+
     afterAll(async () => {
         /*
         The following line executes a tear down of the signup Mock Data.
