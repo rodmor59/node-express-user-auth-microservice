@@ -16,15 +16,23 @@ const signinRoute = '/sign-in'
 describe('POST /sign-in', () => {
 
     beforeAll(async () => {
+        /*
+        Cleanup Mock data that may have not been deleted in previous test executions due to test interruption, otherwise
+        there could be duplicate key errors
+        */
+        await Promise.all([
+            deleteUser(signinMockData.email.email),
+            deleteUser(signinPendingMockData.email),
+            deleteUser(signinLockFailPwdMockData.email),
+            deleteUser(signinNotEnbMockData.email)
+        ])
         // Saves a Mock user to the database
         await createSignedUpUser(signinMockData)
-    
     })
 
     afterAll(async () => {
         // Deletes the mock user from the database
         await deleteUser(signinMockData.email)
-    
     })
 
     // -------------- Grouping of request reject tests, since they share the same test function -------------------
@@ -157,14 +165,14 @@ describe('POST /sign-in', () => {
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
             message: expect.any(String),
-            signinToken: expect.any(String),
+            signinJWT: expect.any(String),
             userInfo: {
                 _id: expect.any(String)
             }
         })
 
         // Assert that the signinToken is a properly formed signin JWT token
-        const isVerified = jwt.verify(response.body.signinToken.replace('Bearer ', ''), process.env.JWT_SECRET_SIGNIN)
+        const isVerified = jwt.verify(response.body.signinJWT.replace('Bearer ', ''), process.env.JWT_SECRET_SIGNIN)
         expect(isVerified).toBeTruthy()
 
         // Assert that the _id is a valid DB id type.
