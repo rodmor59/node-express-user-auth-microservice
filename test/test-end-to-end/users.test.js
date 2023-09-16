@@ -1,16 +1,25 @@
 const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
+const { userStatus } = require('../setup/parameters') //The testing parameters
 const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixture
 const signMockJWT = require('../fixtures/sign-mock-jwt')
 const deleteUser = require('../teardowns/delete-user') //Teardown
+const verifDbIdType = require('../utils/verif-db-id-type')
 
 describe('GET /users/:id', () => {
 
     let mockDataUserId
     let usersGetMockJWT
 
-    const { usersGetMockData, usersGetMockDataSecond, usersGetPendingMockData, usersGetLockFailPwdMockData, usersGetNotEnbMockData } = require('../fixtures/mock-data/users') //Test user data
+    const { 
+        usersGetMockData, 
+        usersGetMockDataSecond, 
+        usersGetMockDataNotFound, 
+        usersGetPendingMockData, 
+        usersGetLockFailPwdMockData, 
+        usersGetNotEnbMockData,
+    } = require('../fixtures/mock-data/users') //Test user data
 
     beforeAll(async () => {
         /*
@@ -19,12 +28,14 @@ describe('GET /users/:id', () => {
         */
         await Promise.all([
             deleteUser(usersGetMockData.email),
+            deleteUser(usersGetMockDataSecond.email),
+            deleteUser(usersGetMockDataNotFound.email),
             deleteUser(usersGetPendingMockData.email),
             deleteUser(usersGetLockFailPwdMockData.email),
             deleteUser(usersGetNotEnbMockData.email)
         ])
         // Saves a Mock user to the database
-        mockDataUserId = (await createSignedUpUser(usersGetMockData)).toString()
+        mockDataUserId = (await createSignedUpUser(usersGetMockData,undefined,true)).toString()
         // Signs a token with the new user id
         usersGetMockJWT = signMockJWT(
             {userId: mockDataUserId},
@@ -89,7 +100,7 @@ describe('GET /users/:id', () => {
 
         const response = await supertest(app)
             .get(`/users/${mockDataUserId}`)
-            .set('authorization', `Bearer ${jwtToSend}`) //Expired token sent without alterations
+            .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -103,7 +114,7 @@ describe('GET /users/:id', () => {
 
         const response = await supertest(app)
             .get(`/users/${mockDataUserId}`)
-            .set('authorization', `Bearer ${jwtToSend}`) //Expired token sent without alterations
+            .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -119,8 +130,8 @@ describe('GET /users/:id', () => {
             const jwtToSend = signMockJWT({ userId: mockDataSecondUserId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
             const response = await supertest(app)
-                .get(`/users/${mockDataUserId}`)
-                .set('authorization', `Bearer ${jwtToSend}`) //Expired token sent without alterations
+                .get(`/users/${mockDataUserId}`) //Send as param in the route an id different than the one used to sign the token
+                .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(400) //This is a bad request, the user is requested with a token not signed with it's id
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -131,5 +142,104 @@ describe('GET /users/:id', () => {
         finally {
             await deleteUser(usersGetMockDataSecond.email)
         }
+    })
+    test('Rejects when user id doesn’t match with a user stored in the database (although the token and id are valid)', async () => {
+        try {
+            // Create a signed up user and get its user id
+            const mockDataId = (await createSignedUpUser(usersGetMockDataNotFound)).toString()
+            // Sign a token with this user id, which is different than the id of mockDataUser
+            const jwtToSend = signMockJWT({ userId: mockDataId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            // Delete the user from the database
+            await deleteUser(usersGetMockDataNotFound.email)
+
+            const response = await supertest(app)
+                .get(`/users/${mockDataId}`)
+                .set('authorization', `Bearer ${jwtToSend}`)
+
+            expect(response.status).toBe(404) //Not found
+            expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+                status: expect.any(String),
+                message: expect.any(String)
+            })
+        }
+        finally {
+            await deleteUser(usersGetMockDataSecond.email)
+        }
+    })
+
+    // ----------------------------- Grouping of user non-enabled status tests ---------------------------------------
+
+    test.each([
+        {
+            mockData: usersGetPendingMockData,
+            testDescription: 'Rejects when the user is in pending status',
+            expectedRespStatus: 490, //The application uses a custom http response code
+            userStatus: userStatus.pending
+        },
+        {
+            mockData: usersGetLockFailPwdMockData,
+            testDescription: 'Rejects when the user is locked due to multiple failed signin attemps',
+            expectedRespStatus: 491, //The application uses a custom http response code
+            userStatus: userStatus.lockedFailedLogin
+        },
+        {
+            mockData: usersGetNotEnbMockData,
+            testDescription: 'Rejects when the user is a non-enabled status (any status different than enabled',
+            expectedRespStatus: 403, //The application uses a custom http response code
+            userStatus: 'Any status different from enabled'
+        },
+    ])('$testDescription', async (test) => {
+        try {
+            /*
+            Fixture. Tests insert their own mock data in the database, since it requires users with different statuses
+            */
+
+            const mockDataId = (await createSignedUpUser(test.mockData, test.userStatus)).toString()
+            // Sign a token with this user id, which is different than the id of mockDataUser
+            const jwtToSend = signMockJWT({ userId: mockDataId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            
+            //Execute test
+            const response = await supertest(app)
+                .get(`/users/${mockDataId}`)
+                .set('authorization', `Bearer ${jwtToSend}`)
+            expect(response.status).toBe(test.expectedRespStatus)
+            expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+                status: expect.any(String),
+                message: expect.any(String)
+            })
+        } finally {
+            // Teardown Mock data regardless of test result
+            await deleteUser(test.mockData.email)
+        }
+    })
+
+    test('Accepts request and responds with user data when all checks passed', async () => {
+
+        const response = await supertest(app)
+            .get(`/users/${mockDataUserId}`)
+            .set('authorization', `Bearer ${usersGetMockJWT}`)
+
+        expect(response.status).toBe(200) //Expects an Ok http response
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String),
+            user: {
+                _id: expect.any(String),
+                email: expect.any(String),
+                firstName: expect.any(String),
+                lastName: expect.any(String),
+                receiveEmails: expect.any(Boolean),
+                status: expect.any(String),
+                createdAt: expect.any(String),
+                updatedAt: expect.any(String),
+                failedLoginAttempts: expect.any(Number),
+                lastAccessDate: expect.any(String),
+                lastSuccessfulLoginDate: expect.any(String),
+            }
+        })
+
+        // Assert that the received new user id is a valid DB id type.
+        const isDbObjId = verifDbIdType(response.body.user._id)
+        expect(isDbObjId ).toBeTruthy()
     })
 })

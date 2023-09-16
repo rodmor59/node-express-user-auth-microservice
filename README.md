@@ -199,12 +199,14 @@ README.md
         └── passport-strategies.js
     ├── [handlers]
         ├── sign-in-success.js
-        └── sign-up.js
+        ├── sign-up.js
+        └── users.js
     ├── [middleware]
         ├── auth.js
         └── [request-validations]
             ├── sign-in.js
-            └── sign-up.js
+            ├── sign-up.js
+            └── users.js
     ├── [models]
         └── user.js
     ├── [services]
@@ -214,19 +216,27 @@ README.md
         └── sign-up.js
     └── [utils]
         ├── check-password.js
+        ├── [db]
+            └── validate-doc-id.js
         ├── encrypt-pwd.js
         ├── res-error.js
         ├── sign-jwt-token.js
         ├── user-dates-update.js
         └── [validators]
-            ├── validate-req-sign-in.js
-            ├── validate-req-sign-up.js
-            └── validate-str-formats.js
+            ├── sign-in.js
+            ├── sign-up.js
+            ├── str-formats.js
+            ├── token-payload.js
+            └── users.js
 [test]
     ├── [fixtures]
         ├── create-signed-up-user.js
         ├── create-user.js
-        └── mock-data.js
+        ├── [mock-data]
+            ├── sign-in.js
+            ├── sign-up.js
+            └── users.js
+        └── sign-mock-jwt.js
     ├── [setup]
         ├── parameters.js
         └── setup-tests.js
@@ -234,7 +244,8 @@ README.md
         └── delete-user.js
     ├── [test-end-to-end]
         ├── sign-in.test.js
-        └── sign-up.test.js
+        ├── sign-up.test.js
+        └── users.test.js
     └── [utils]
         └── verif-db-id-type.js
 ```

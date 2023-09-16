@@ -182,27 +182,6 @@ describe('POST /sign-up', () => {
     })
     // ----------------------------- End of reject request test grouping----------------------------------------------
 
-    test('Accepts and process when the data is correct', async () => {
-
-        const response = await supertest(app)
-            .post(signupRoute)
-            .send(signupMockData)
-
-        expect(response.status).toBe(200) //Expects an Ok http response
-        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
-            status: expect.any(String),
-            message: expect.any(String),
-            newUserId: expect.any(String), //Note that this prop is not sent as respnse when the signup fails
-        })
-
-        // Assert that the received new user id is a valid DB id type.
-        const isDbObjId = verifDbIdType(response.body.newUserId)
-        expect(isDbObjId ).toBeTruthy()
-
-        // Cleanup test data created by the signup process. If the test fails this is not necessary (and doesn't execute because test is interrupted at error)
-        await deleteUser(signupMockData.email)
-    })
-
     test('Rejects when there is another user with the same email', async () => {
         try {
             /*
@@ -226,5 +205,26 @@ describe('POST /sign-up', () => {
             // Teardown Mock data regardless of test result
             await deleteUser(signupDupEmailMockData.email)
         }
+    })
+
+    test('Accepts and process when the data is correct', async () => {
+
+        const response = await supertest(app)
+            .post(signupRoute)
+            .send(signupMockData)
+
+        expect(response.status).toBe(200) //Expects an Ok http response
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String),
+            newUserId: expect.any(String), //Note that this prop is not sent as respnse when the signup fails
+        })
+
+        // Assert that the received new user id is a valid DB id type.
+        const isDbObjId = verifDbIdType(response.body.newUserId)
+        expect(isDbObjId ).toBeTruthy()
+
+        // Cleanup test data created by the signup process. If the test fails this is not necessary (and doesn't execute because test is interrupted at error)
+        await deleteUser(signupMockData.email)
     })
 })
