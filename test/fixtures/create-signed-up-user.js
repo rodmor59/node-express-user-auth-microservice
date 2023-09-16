@@ -18,7 +18,7 @@ const createSignedUpUser = async (userData, usrStatus = userStatus.enabled) => {
     const encryptedPwd = await bcrypt.hash(userData.password, saltRounds)
 
     //Data preparation steps (Insert testSignUpData directly into the db)
-    await UserModel.create({
+    const newUser = await UserModel.create({
         ...userData,
         password: encryptedPwd, //Password is saved to the database encrypted
         status: usrStatus, //Not relevant for test but must pass it as the Schema requires it. Any string value will suffice.
@@ -26,6 +26,7 @@ const createSignedUpUser = async (userData, usrStatus = userStatus.enabled) => {
         lastAccessDate: new Date(), //Not relevant for test but must pass it as the Schema requires it
         lastSuccessfulLoginDate: null //Not relevant for test but must pass it as the Schema requires it
     })
+    return newUser._id
 }
 
 //Default export

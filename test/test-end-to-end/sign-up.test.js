@@ -1,7 +1,7 @@
 const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
-const { signupMockData, signupDupEmailMockData } = require('../fixtures/mock-data') //Test user data
+const { signupMockData, signupDupEmailMockData } = require('../fixtures/mock-data/sign-up') //Test user data
 const createUser = require('../fixtures/create-user') // Fixture
 const deleteUser = require('../teardowns/delete-user') //Teardown
 const verifDbIdType = require('../utils/verif-db-id-type')

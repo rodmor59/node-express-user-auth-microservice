@@ -100,6 +100,7 @@ This project aims to:
 - **jsonwebtoken:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user signin, after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
 - **bcrypt:** Hashing passwords securely in JavaScript (Used in this project at user signup).
 - **Joi:** Schema validation library for enforcing constraints on JavaScript objects. Used to apply data validations ass middleware, before executing route handlers.
+- **joi-objectid:** A Joi extension that adds support for validating MongoDB ObjectIds.
 - **Mongoose:** Used for modeling and interacting with MongoDB databases.
 - **dotenv:** Loading environment variables from a .env file in Node.js applications. (The Database URI is loaded this way)
 - **Supertest:** Testing Node.js HTTP servers by making HTTP requests and asserting responses, withput having to start an http server (Used in conjunction with Jest for testing)
