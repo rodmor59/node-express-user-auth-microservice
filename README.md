@@ -42,12 +42,19 @@ This project aims to:
 ### Endpoints
 
 * Signup.
-* Signin (Login)
+* Signin (Login).
+* Get user data.
+
+### User data
+
+* Passwords saved in users' documents are hash encrypted.
+* User documents register the number of failed login attempts, when a threshold is reached the user changed status to locked.
+* The API records the following dates for user documents: date of creation, date of last user data update, last access date, and last successful login date.
 
 ### Technical features
 
-* Password encryption.
 * Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client send login and password once. Then, they can use the token for authentication until it expires).
+* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
 * Schama based request data validation with middleware functions that execute before handlers.
 * The endpoints follows a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
@@ -64,17 +71,12 @@ This project aims to:
 
 * Signup email confirmation.
 * Signup resend email confirmation.
-* Get user data.
 * Edit user data.
 * Delete user.
 * Change password.
 * Autorization check (Token validation).
 * Password send reset code.
 * Password reset.
-
-### Technical features
-
-* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
 
 <!--
 (#tech-stack-used)
@@ -210,10 +212,14 @@ README.md
     ├── [models]
         └── user.js
     ├── [services]
+        ├── [auth]
+            ├── check-user-auth-status.js
+            └── check-user-password.js
         ├── [dbservices]
             └── user.js
         ├── sign-in-auth.js
-        └── sign-up.js
+        ├── sign-up.js
+        └── users.js
     └── [utils]
         ├── check-password.js
         ├── [db]
@@ -247,7 +253,9 @@ README.md
         ├── sign-up.test.js
         └── users.test.js
     └── [utils]
-        └── verif-db-id-type.js
+        ├── db-find-users.js
+        ├── verif-db-id-type.js
+        └── verif-types.js
 ```
 
 <!--
