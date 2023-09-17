@@ -6,6 +6,7 @@ const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixtu
 const signMockJWT = require('../fixtures/sign-mock-jwt')
 const deleteUser = require('../teardowns/delete-user') //Teardown
 const verifDbIdType = require('../utils/verif-db-id-type')
+const { isValidDate } = require('../utils/verif-types')
 
 describe('GET /users/:id', () => {
 
@@ -167,8 +168,7 @@ describe('GET /users/:id', () => {
         }
     })
 
-    // ----------------------------- Grouping of user non-enabled status tests ---------------------------------------
-
+    // ----------------------------- Grouping of user non-enabled status tests -------------------------------------------------
     test.each([
         {
             mockData: usersGetPendingMockData,
@@ -230,16 +230,26 @@ describe('GET /users/:id', () => {
                 lastName: expect.any(String),
                 receiveEmails: expect.any(Boolean),
                 status: expect.any(String),
-                createdAt: expect.any(String),
-                updatedAt: expect.any(String),
+                createdOn: expect.any(String),
+                userDataUpdatedOn: expect.any(String),
                 failedLoginAttempts: expect.any(Number),
-                lastAccessDate: expect.any(String),
-                lastSuccessfulLoginDate: expect.any(String),
+                lastAccessOn: expect.any(String),
+                lastSuccessfulLoginOn: expect.any(String),
             }
         })
 
         // Assert that the received new user id is a valid DB id type.
         const isDbObjId = verifDbIdType(response.body.user._id)
         expect(isDbObjId ).toBeTruthy()
+
+        // Assert dates received in the response
+        let isDate = isValidDate(response.body.user.createdOn)
+        expect(isDate).toBeTruthy()
+        isDate = isValidDate(response.body.user.userDataUpdatedOn)
+        expect(isDate).toBeTruthy()
+        isDate = isValidDate(response.body.user.lastAccessOn)
+        expect(isDate).toBeTruthy()
+        isDate = isValidDate(response.body.user.lastSuccessfulLoginOn)
+        expect(isDate).toBeTruthy()
     })
 })

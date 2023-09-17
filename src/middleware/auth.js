@@ -77,9 +77,14 @@ module.exports = {
             }
             // Sets a const with the user obtained fron the DB. Named dbUser not to be confused with the user received from the passport Authenticate JWT Strategy
             const dbUser = userCheck.payload.user
+            // A successful user access has ocurred, uptade the user's las access date
+            dbUser.lastAccessOn = new Date()
             // Check that the user is in enabled status
             const userStatusCheck = checkUserAuthStatus(dbUser) //Function must be called with the entire user object
             if (!userStatusCheck.success) {
+                // Save lastAccessOn update before exiting
+                dbUser.save()
+                // Return error
                 return sendError(userStatusCheck.httpStatusCode, statusTxt.statusFailed, userStatusCheck.payload.message, null, res)
             }
             // User has passed all checks

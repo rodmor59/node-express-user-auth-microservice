@@ -16,14 +16,14 @@ database (Since the system sabes encrypted passwords in the database)
 const createSignedUpUser = async (
     userData,
     usrStatus = userStatus.enabled,
-    setLastSuccessfulLoginDate = false
+    setlastSuccessfulLoginOn = false
 ) => {
 
     const currentDate = new Date()
 
-    let lastSuccessfulLoginDate = null
-    if (setLastSuccessfulLoginDate) {
-        lastSuccessfulLoginDate = currentDate
+    let lastSuccessfulLoginOn = null
+    if (setlastSuccessfulLoginOn) {
+        lastSuccessfulLoginOn = currentDate
     }
 
     //Encrypts password
@@ -35,8 +35,8 @@ const createSignedUpUser = async (
         password: encryptedPwd, //Password is saved to the database encrypted
         status: usrStatus, //Not relevant for test but must pass it as the Schema requires it. Any string value will suffice.
         failedLoginAttempts: 0, //Not relevant for test but must pass it as the Schema requires it
-        lastAccessDate: currentDate, //Not relevant for test but must pass it as the Schema requires it
-        lastSuccessfulLoginDate: lastSuccessfulLoginDate //Not relevant for test but must pass it as the Schema requires it
+        lastAccessOn: currentDate, //Not relevant for test but must pass it as the Schema requires it
+        lastSuccessfulLoginOn: lastSuccessfulLoginOn //Not relevant for test but must pass it as the Schema requires it
     })
     return newUser._id
 }

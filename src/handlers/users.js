@@ -10,23 +10,23 @@ const usersGet = (req, res, next) => {
         /*
         Destructure the request object, extracting the prop user, which should have been attached 
         by the previous procedure in the pipeline.
-
-        Also, destructre an object that does not contain the encrypted password, to avoid sending it back to the
-        client in the request. 
-
-        Furthermore, disable esLint for the next line to suprress the warning that password is not used.
-
         */
-        /* eslint-disable-next-line */
         const { user } = req
 
         if (!user) {
-            /*user was not received in the request object, since this function executes after 
-            a middleware that is supposed to attach it, some internal error must have occured*/
+            /*
+            user was not received in the request object, since this function executes after 
+            a middleware that is supposed to attach it, an internal error must have occured
+            */
             return res.status(500).json({error: appParameters.messages.msgInternalError})
         }
 
-        // Prepare the response user object to send, since it must not contain the password
+        // Save lastAccessOn update before responding. This update was made by the middleware function that sent the user here
+        user.save()
+
+        /* Prepare the response user object to send. This user object must not contain the encrypted password, which should never be
+        sent in a response to the client
+        */
         const userResponse = {
             _id: user._id,
             email: user.email,
@@ -34,11 +34,11 @@ const usersGet = (req, res, next) => {
             lastName: user.lastName,
             receiveEmails: user.receiveEmails,
             status: user.status,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
+            createdOn: user.createdOn,
+            userDataUpdatedOn: user.userDataUpdatedOn,
             failedLoginAttempts: user.failedLoginAttempts,
-            lastAccessDate: user.lastAccessDate,
-            lastSuccessfulLoginDate: user.lastSuccessfulLoginDate
+            lastAccessOn: user.lastAccessOn,
+            lastSuccessfulLoginOn: user.lastSuccessfulLoginOn
         }
 
         //Send user to the client

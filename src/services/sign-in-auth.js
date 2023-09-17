@@ -23,8 +23,8 @@ module.exports.authentication = async (email, password) => {
     //Assign the userCheck payload to a constant
     const user = userCheck.payload.user
 
-    //Update user last Access date at thos point (A successful access ocurred)
-    updateUserDates.lastAccessDate(user._id)
+    //Update user last Access date at this point (A successful access ocurred)
+    updateUserDates.lastAccessOn(user._id)
 
     //Check user status
     const userStatusCheckResult = checkUserAuthStatus(user)
@@ -42,7 +42,7 @@ module.exports.authentication = async (email, password) => {
     // At this point user has complied will all requisites for a successful sign in
     // Update the failid login attempts to zero and the last date of successful login
     user.failedLoginAttempts=0
-    user.lastSuccessfulLoginDate = new Date()
+    user.lastSuccessfulLoginOn = new Date()
     user.save()
 
     //Sucess!

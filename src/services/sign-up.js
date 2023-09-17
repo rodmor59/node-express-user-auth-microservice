@@ -33,8 +33,7 @@ module.exports.signup = async (userData) => {
         ...userData,
         status: userStatus.enabled,
         failedLoginAttempts: 0,
-        lastAccessDate: nowDate,
-        lastSuccessfulLoginDate: null
+        
     })
 
     //Send email to confirm user email address. Function called without await so the function continues processing while the email is sent
