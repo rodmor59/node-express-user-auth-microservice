@@ -1,5 +1,5 @@
 const Joi = require('joi')
-const StrFormatValidators = require('./validate-str-formats')
+const StrFormatValidators = require('./str-formats')
 
 module.exports.signupValidation = (data) => {
     const schema = Joi.object({

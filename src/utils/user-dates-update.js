@@ -2,22 +2,22 @@
 const userDBService = require('../services/dbservices/user')
 
 module.exports = {
-    lastAccessDate: (_id) => {
+    lastAccessOn: (_id) => {
         const timeStamp = new Date()
         userDBService.updateOne(
             { _id: _id },
             {
-                lastAccessDate: timeStamp
+                lastAccessOn: timeStamp
             }
         )
     },
-    lastSuccessfulLoginDate: (_id) => {
+    lastSuccessfulLoginOn: (_id) => {
         const timeStamp = new Date()
         userDBService.updateOne(
             { _id: _id },
             {
-                lastSuccessfulLoginDate: timeStamp,
-                lastAccessDate: timeStamp
+                lastSuccessfulLoginOn: timeStamp,
+                lastAccessOn: timeStamp
             }
         )
     } 

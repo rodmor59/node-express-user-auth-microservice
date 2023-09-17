@@ -24,7 +24,7 @@ module.exports.signinSuccess = async function (req, res, next) {
         }
 
         //No internal errors occurred, proceed with JWT signing
-        const JWT = signJWT({ userId: resultAuth?.userInfo?._id })
+        const JWT = signJWT({ userId: resultAuth.payload.userInfo._id })
         
         //Send a successful response, with the resultAuth payload plus signinToken
         res.status(resultAuth.httpStatusCode).json({

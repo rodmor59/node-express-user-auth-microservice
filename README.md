@@ -42,12 +42,19 @@ This project aims to:
 ### Endpoints
 
 * Signup.
-* Signin (Login)
+* Signin (Login).
+* Get user data.
+
+### User data
+
+* Passwords saved in users' documents are hash encrypted.
+* User documents register the number of failed login attempts, when a threshold is reached the user changed status to locked.
+* The API records the following dates for user documents: date of creation, date of last user data update, last access date, and last successful login date.
 
 ### Technical features
 
-* Password encryption.
 * Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client send login and password once. Then, they can use the token for authentication until it expires).
+* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
 * Schama based request data validation with middleware functions that execute before handlers.
 * The endpoints follows a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
@@ -64,17 +71,12 @@ This project aims to:
 
 * Signup email confirmation.
 * Signup resend email confirmation.
-* Get user data.
 * Edit user data.
 * Delete user.
 * Change password.
 * Autorization check (Token validation).
 * Password send reset code.
 * Password reset.
-
-### Technical features
-
-* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
 
 <!--
 (#tech-stack-used)
@@ -100,6 +102,7 @@ This project aims to:
 - **jsonwebtoken:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user signin, after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
 - **bcrypt:** Hashing passwords securely in JavaScript (Used in this project at user signup).
 - **Joi:** Schema validation library for enforcing constraints on JavaScript objects. Used to apply data validations ass middleware, before executing route handlers.
+- **joi-objectid:** A Joi extension that adds support for validating MongoDB ObjectIds.
 - **Mongoose:** Used for modeling and interacting with MongoDB databases.
 - **dotenv:** Loading environment variables from a .env file in Node.js applications. (The Database URI is loaded this way)
 - **Supertest:** Testing Node.js HTTP servers by making HTTP requests and asserting responses, withput having to start an http server (Used in conjunction with Jest for testing)
@@ -198,34 +201,48 @@ README.md
         └── passport-strategies.js
     ├── [handlers]
         ├── sign-in-success.js
-        └── sign-up.js
+        ├── sign-up.js
+        └── users.js
     ├── [middleware]
         ├── auth.js
         └── [request-validations]
             ├── sign-in.js
-            └── sign-up.js
+            ├── sign-up.js
+            └── users.js
     ├── [models]
         └── user.js
     ├── [services]
+        ├── [auth]
+            ├── check-user-auth-status.js
+            └── check-user-password.js
         ├── [dbservices]
             └── user.js
         ├── sign-in-auth.js
-        └── sign-up.js
+        ├── sign-up.js
+        └── users.js
     └── [utils]
         ├── check-password.js
+        ├── [db]
+            └── validate-doc-id.js
         ├── encrypt-pwd.js
         ├── res-error.js
         ├── sign-jwt-token.js
         ├── user-dates-update.js
         └── [validators]
-            ├── validate-req-sign-in.js
-            ├── validate-req-sign-up.js
-            └── validate-str-formats.js
+            ├── sign-in.js
+            ├── sign-up.js
+            ├── str-formats.js
+            ├── token-payload.js
+            └── users.js
 [test]
     ├── [fixtures]
         ├── create-signed-up-user.js
         ├── create-user.js
-        └── mock-data.js
+        ├── [mock-data]
+            ├── sign-in.js
+            ├── sign-up.js
+            └── users.js
+        └── sign-mock-jwt.js
     ├── [setup]
         ├── parameters.js
         └── setup-tests.js
@@ -233,9 +250,12 @@ README.md
         └── delete-user.js
     ├── [test-end-to-end]
         ├── sign-in.test.js
-        └── sign-up.test.js
+        ├── sign-up.test.js
+        └── users.test.js
     └── [utils]
-        └── verif-db-id-type.js
+        ├── db-find-users.js
+        ├── verif-db-id-type.js
+        └── verif-types.js
 ```
 
 <!--

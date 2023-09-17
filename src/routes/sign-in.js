@@ -10,7 +10,7 @@ const signinHandler = require('../handlers/sign-in-success')
 
 console.log('Sign in routes loaded')
 
-//---- routing to user sign-ip (Logimn)
+//---- routing to user sign-in (Login)
 router.post(
     '/sign-in', 
     ReqValidations.validateSigninFields,

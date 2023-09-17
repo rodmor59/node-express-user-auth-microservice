@@ -31,17 +31,26 @@ const userSchema = new mongoose.Schema(
             type: Number,
             required: true
         },
-        lastAccessDate: { //Sucessful login or not. A failed login will set this date.
+        createdOn: { //Any user data access. A failed login will set this date.
             type: Date,
-            required: true
+            required: true,
+            default: Date.now()
         },
-        lastSuccessfulLoginDate: {
+        userDataUpdatedOn: { //Any user data access. A failed login will set this date.
             type: Date,
+            required: true,
+            default: Date.now()
+        },
+        lastAccessOn: { //Any user data access. A failed login will set this date.
+            type: Date,
+            required: true,
+            default: Date.now()
+        },
+        lastSuccessfulLoginOn: {
+            type: Date,
+            default: null
         },
     },
-    { //CreatedOn and UpdatedOn fields are added and managed by moongose
-        timestamps: true,
-    }
 )
 
 mongoose.model('User', userSchema)

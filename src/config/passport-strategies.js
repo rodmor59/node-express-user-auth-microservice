@@ -1,6 +1,7 @@
 const passportLocal = require('passport-local')
-//const passportJWT = require('passport-jwt')
+const passportJWT = require('passport-jwt')
 
+const { tokenPayloadValidation } = require('../utils/validators/token-payload')
 const signinService = require('../services/sign-in-auth')
 
 // Define the local strategy for username/password authentication
@@ -12,7 +13,12 @@ module.exports = {
         },
         async (email, password, done) => {
 
-            //Call the signin Service
+            /*Call the sign in Service, which performs the following cheks:
+                - Email corresponds to a user in the system
+                - User is in enabled status (is not pending, locked by failed attempts, or any status different
+                    than enabled
+                - That the password matches
+            */
             const usrAuthResult = await signinService.authentication(email, password)
 
             /*
@@ -30,20 +36,26 @@ module.exports = {
     ),
 
     // Define the JWT strategy for token-based authentication
-    /*jwtStrategy: new passportJWT.Strategy(
+    jwtStrategy: new passportJWT.Strategy(
         {
             jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: process.env.JWT_SECRET_SIGNIN,
         },
         (jwtPayload, done) => {
-            // Logic to authenticate the user based on JWT payload
-            // ...
-
-            if (authenticated) {
-                return done(null, user)
-            } else {
+            if (!jwtPayload) {
+                // If jwtPayload is null or undefined, authentication failed
                 return done(null, false)
             }
+
+            const { error } = tokenPayloadValidation(jwtPayload)
+
+            if (error) {
+                // the token is valid, but the payload does not include the necessary information
+                return done(null, false)
+            }
+            //Verify the payload contents with a Joi Schema
+
+            return done(null, jwtPayload)
         }
-    )*/
+    )
 }

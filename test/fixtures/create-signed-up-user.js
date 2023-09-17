@@ -13,19 +13,32 @@ Creates a user with an encrypted password to use it in signin, user modification
 tests validates the system bahaviour of these endpoints in which the password is encrypted to compate ir to the
 database (Since the system sabes encrypted passwords in the database)
 */
-const createSignedUpUser = async (userData, usrStatus = userStatus.enabled) => {
+const createSignedUpUser = async (
+    userData,
+    usrStatus = userStatus.enabled,
+    setlastSuccessfulLoginOn = false
+) => {
+
+    const currentDate = new Date()
+
+    let lastSuccessfulLoginOn = null
+    if (setlastSuccessfulLoginOn) {
+        lastSuccessfulLoginOn = currentDate
+    }
+
     //Encrypts password
     const encryptedPwd = await bcrypt.hash(userData.password, saltRounds)
 
     //Data preparation steps (Insert testSignUpData directly into the db)
-    await UserModel.create({
+    const newUser = await UserModel.create({
         ...userData,
         password: encryptedPwd, //Password is saved to the database encrypted
         status: usrStatus, //Not relevant for test but must pass it as the Schema requires it. Any string value will suffice.
         failedLoginAttempts: 0, //Not relevant for test but must pass it as the Schema requires it
-        lastAccessDate: new Date(), //Not relevant for test but must pass it as the Schema requires it
-        lastSuccessfulLoginDate: null //Not relevant for test but must pass it as the Schema requires it
+        lastAccessOn: currentDate, //Not relevant for test but must pass it as the Schema requires it
+        lastSuccessfulLoginOn: lastSuccessfulLoginOn //Not relevant for test but must pass it as the Schema requires it
     })
+    return newUser._id
 }
 
 //Default export

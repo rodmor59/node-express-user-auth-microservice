@@ -19,6 +19,7 @@ require('./config/passport-config')
 //Routes
 app.use(require('./routes/sign-up'))
 app.use(require('./routes/sign-in'))
+app.use(require('./routes/users'))
 
 //Setup custom error handler from the app configuration
 app.use(customErrorHandler)

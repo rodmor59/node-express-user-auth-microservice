@@ -1,9 +1,11 @@
 const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
-const { signupMockData, signupDupEmailMockData } = require('../fixtures/mock-data') //Test user data
+const { userStatus } = require('../setup/parameters') //The testing parameters
+const { signupMockData, signupDupEmailMockData } = require('../fixtures/mock-data/sign-up') //Test user data
 const createUser = require('../fixtures/create-user') // Fixture
 const deleteUser = require('../teardowns/delete-user') //Teardown
+const usersFindDbUtils = require('../utils/db-find-users')
 const verifDbIdType = require('../utils/verif-db-id-type')
 
 //URL Routes constants
@@ -182,27 +184,6 @@ describe('POST /sign-up', () => {
     })
     // ----------------------------- End of reject request test grouping----------------------------------------------
 
-    test('Accepts and process when the data is correct', async () => {
-
-        const response = await supertest(app)
-            .post(signupRoute)
-            .send(signupMockData)
-
-        expect(response.status).toBe(200) //Expects an Ok http response
-        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
-            status: expect.any(String),
-            message: expect.any(String),
-            newUserId: expect.any(String), //Note that this prop is not sent as respnse when the signup fails
-        })
-
-        // Assert that the received new user id is a valid DB id type.
-        const isDbObjId = verifDbIdType(response.body.newUserId)
-        expect(isDbObjId ).toBeTruthy()
-
-        // Cleanup test data created by the signup process. If the test fails this is not necessary (and doesn't execute because test is interrupted at error)
-        await deleteUser(signupMockData.email)
-    })
-
     test('Rejects when there is another user with the same email', async () => {
         try {
             /*
@@ -226,5 +207,44 @@ describe('POST /sign-up', () => {
             // Teardown Mock data regardless of test result
             await deleteUser(signupDupEmailMockData.email)
         }
+    })
+
+    test('Accepts and process when the data is correct', async () => {
+
+        const response = await supertest(app)
+            .post(signupRoute)
+            .send(signupMockData)
+
+        expect(response.status).toBe(200) //Expects an Ok http response
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String),
+            newUserId: expect.any(String), //Note that this prop is not sent as respnse when the signup fails
+        })
+
+        // Assert that the received new user id is a valid DB id type.
+        const isDbObjId = verifDbIdType(response.body.newUserId)
+        expect(isDbObjId ).toBeTruthy()
+
+        // Assert that the new user data was saved in the database with the information sent in the request
+        const signedUpUser = await usersFindDbUtils.userFindById(response.body.newUserId)
+        // Assert response prop with specific values
+        expect(signedUpUser.email).toBe(signupMockData.email),
+        expect(signedUpUser.firstName).toBe(signupMockData.firstName),
+        expect(signedUpUser.lastName).toBe(signupMockData.lastName),
+        expect(signedUpUser.receiveEmails).toBe(signupMockData.receiveEmails),
+        expect(signedUpUser.status).toBe(userStatus.enabled), //For the moment, the initial status of a signedUp user is Enabled
+        expect(signedUpUser.failedLoginAttempts).toBe(0),
+        expect(signedUpUser.lastSuccessfulLoginOn).toBe(null),
+        // Assert props in the response that y have any value
+        expect(signedUpUser).toMatchObject({
+            password: expect.any(String), // Password is encrypted and is supposed to be a secret, even for testing
+            createdOn: expect.any(Date),
+            userDataUpdatedOn: expect.any(Date),
+            lastAccessOn: expect.any(Date),
+        })
+
+        // Cleanup test data created by the signup process. If the test fails this is not necessary (and doesn't execute because test is interrupted at error)
+        await deleteUser(signupMockData.email)
     })
 })

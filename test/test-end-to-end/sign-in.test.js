@@ -3,7 +3,7 @@ const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
 const { userStatus } = require('../setup/parameters') //The testing parameters
-const { signinMockData, signinPendingMockData, signinLockFailPwdMockData, signinNotEnbMockData } = require('../fixtures/mock-data') //Test user data
+const { signinMockData, signinPendingMockData, signinLockFailPwdMockData, signinNotEnbMockData } = require('../fixtures/mock-data/sign-in') //Test user data
 const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixture
 const deleteUser = require('../teardowns/delete-user') //Teardown
 const verifDbIdType = require('../utils/verif-db-id-type')
