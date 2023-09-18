@@ -21,9 +21,6 @@ const usersGet = (req, res, next) => {
             return res.status(500).json({error: appParameters.messages.msgInternalError})
         }
 
-        // Save lastAccessOn update before responding. This update was made by the middleware function that sent the user here
-        user.save()
-
         /* Prepare the response user object to send. This user object must not contain the encrypted password, which should never be
         sent in a response to the client
         */

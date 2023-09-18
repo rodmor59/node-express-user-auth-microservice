@@ -60,6 +60,7 @@ This project aims to:
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
 * Environment variables file segregated from the API Source code.
 * Testing configuration and tests with Jest. It also includes HTTP server testing with the "supertest" library.
+* Include testing to ensure that user data sent to data creation and modification endpoints is correctly saved in the database. To this end, the test access the database directly and compare saved data against expected results.
 
 <!--
 (#Planned Features)

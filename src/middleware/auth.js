@@ -2,6 +2,7 @@ const passport = require('passport')
 
 const { getUserById } = require('../services/users')
 const checkUserAuthStatus = require('../services/auth/check-user-auth-status')
+const { updateLastAccessOn } = require('../utils/user-updates')
 const { statusTxt, messages } = require('../config/parameters')
 const sendError = require('../utils/res-error')
 
@@ -77,13 +78,18 @@ module.exports = {
             }
             // Sets a const with the user obtained fron the DB. Named dbUser not to be confused with the user received from the passport Authenticate JWT Strategy
             const dbUser = userCheck.payload.user
-            // A successful user access has ocurred, uptade the user's las access date
-            dbUser.lastAccessOn = new Date()
+            /* 
+            A successful user access has ocurred.
+            
+            The following line uptades the user's last access date in the database. Also, it ubpdates the
+            lastAccessOn the user object that we have loaded in memory, this saves another access to the 
+            database to update the dbUser object.
+            
+            */
+            dbUser.lastAccessOn = updateLastAccessOn(dbUser._id)
             // Check that the user is in enabled status
             const userStatusCheck = checkUserAuthStatus(dbUser) //Function must be called with the entire user object
             if (!userStatusCheck.success) {
-                // Save lastAccessOn update before exiting
-                dbUser.save()
                 // Return error
                 return sendError(userStatusCheck.httpStatusCode, statusTxt.statusFailed, userStatusCheck.payload.message, null, res)
             }
