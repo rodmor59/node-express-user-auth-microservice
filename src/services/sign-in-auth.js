@@ -1,8 +1,8 @@
 const { getUserByEmail } = require('./users')
 const checkUserAuthStatus = require('./auth/check-user-auth-status')
 const checkUserPassword = require('./auth/check-user-password')
+const { increaseFailedLoginAttempts, updateLastAccessOn, updateSuccessfulLogin } = require('../utils/user-updates')
 const { statusTxt } = require('../config/parameters')
-const updateUserDates = require('../utils/user-dates-update')
 
 //Error messages
 const successMsgSignin = 'User signed in successfully'
@@ -10,10 +10,10 @@ const successMsgSignin = 'User signed in successfully'
 //---- service that authenticate users checking username, password and if the user is not locked
 module.exports.authentication = async (email, password) => {
 
-    //Check that the email the new user has sent is not taken
+    //Check that the email sing corresponds with a user registered in the system
     const userCheck = await getUserByEmail(email)
     if (!userCheck.success) {
-        //There is a user with that email already
+        //No user with that email
         return {
             ...userCheck,
             httpStatusCode: 401 // getUserByEmail returns 404 when user is not found, here change it to 401 to reflect that we are in the sign-in process, not getting a user resource
@@ -24,7 +24,7 @@ module.exports.authentication = async (email, password) => {
     const user = userCheck.payload.user
 
     //Update user last Access date at this point (A successful access ocurred)
-    updateUserDates.lastAccessOn(user._id)
+    updateLastAccessOn(user._id)
 
     //Check user status
     const userStatusCheckResult = checkUserAuthStatus(user)
@@ -36,14 +36,13 @@ module.exports.authentication = async (email, password) => {
     //Check the password
     const resultPasswordCheck = await checkUserPassword(password, user)
     if (!resultPasswordCheck.success) {
+        increaseFailedLoginAttempts(user) //Increases the failed logins attempts before exiting
         return resultPasswordCheck
     }
 
     // At this point user has complied will all requisites for a successful sign in
     // Update the failid login attempts to zero and the last date of successful login
-    user.failedLoginAttempts=0
-    user.lastSuccessfulLoginOn = new Date()
-    user.save()
+    updateSuccessfulLogin(user._id)
 
     //Sucess!
     return {

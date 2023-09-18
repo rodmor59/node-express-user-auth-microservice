@@ -1,8 +1,4 @@
-const {
-    numWrongPwdAttemptsToLockUser,
-    statusTxt,
-    userStatus
-} = require('../../config/parameters')
+const { statusTxt } = require('../../config/parameters')
 const isPasswordValid = require('../../utils/check-password')
 
 //Consts messages
@@ -12,13 +8,6 @@ const errMsgWrongPwd = 'Incorrect password'
 const checkUserPassword = async (passwordToCheck, user) => {
     const validPassword = await isPasswordValid(passwordToCheck, user.password)
     if (!validPassword) {
-        //Adds one failed signin attempt
-        user.failedLoginAttempts++
-        //If user has reached the limit of failed attempts, its status must change to lockedFailedLogin
-        if (user.failedLoginAttempts === numWrongPwdAttemptsToLockUser) {
-            user.status = userStatus.lockedFailedLogin
-        }
-        user.save() //Save changes to user
         return {
             success: false, //Notify the caller that the function was not successful
             httpStatusCode: 401, //Notify the caller why the function was not successful in the form of an httpErrorCode that it can pass to the client
