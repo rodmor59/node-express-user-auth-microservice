@@ -2,11 +2,21 @@ const jwt = require('jsonwebtoken')
 const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
-const { userStatus } = require('../setup/parameters') //The testing parameters
-const { signinMockData, signinPendingMockData, signinLockFailPwdMockData, signinNotEnbMockData } = require('../fixtures/mock-data/sign-in') //Test user data
+const { delayTime, numWrongPwdAttemptsToLockUser, userStatus } = require('../setup/parameters') //The testing parameters
+const { signinMockData,
+    signinWrongPasswordMockData,
+    signinWrongPasswordLocksUserMockData,
+    signinSuccessMockData, 
+    signinPendingMockData, 
+    signinLockFailPwdMockData, 
+    signinNotEnbMockData 
+} = require('../fixtures/mock-data/sign-in') //Test user data
 const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixture
-const deleteUser = require('../teardowns/delete-user') //Teardown
+const usersFindDbUtils = require('../utils/db-find-users')
+const delay = require('../utils/delay')
 const verifDbIdType = require('../utils/verif-db-id-type')
+const { isValidDate } = require('../utils/verif-types')
+const deleteUser = require('../teardowns/delete-user') //Teardown
 
 //URL Routes constants
 const signinRoute = '/sign-in'
@@ -21,13 +31,16 @@ describe('POST /sign-in', () => {
         there could be duplicate key errors
         */
         await Promise.all([
-            deleteUser(signinMockData.email.email),
+            deleteUser(signinMockData.email),
+            deleteUser(signinWrongPasswordMockData.email),
+            deleteUser(signinWrongPasswordLocksUserMockData.email),
+            deleteUser(signinSuccessMockData.email),
             deleteUser(signinPendingMockData.email),
             deleteUser(signinLockFailPwdMockData.email),
             deleteUser(signinNotEnbMockData.email)
         ])
         // Saves a Mock user to the database
-        await createSignedUpUser(signinMockData)
+        await createSignedUpUser(signinMockData, undefined, false)
     })
 
     afterAll(async () => {
@@ -84,14 +97,6 @@ describe('POST /sign-in', () => {
             testDescription: 'Rejects when there is no user with the received email (username)',
             expectedRespStatus: 401, //Unathorized because there is no such user
         },
-        {
-            mockData: {
-                email: signinMockData.email,
-                password: 'pwdMock21*', //This password is wrong
-            },
-            testDescription: 'Rejects when the password is incorrect (wrong password)',
-            expectedRespStatus: 401, //Unathorized because the password is incorrect
-        },
     ])('$testDescription', async (test) => {
         const response = await supertest(app)
             .post(signinRoute)
@@ -103,6 +108,93 @@ describe('POST /sign-in', () => {
         })
     })
     // ----------------------------- End of reject request test grouping----------------------------------------------
+
+    // ----------------------------------------Password tests ------------------------------------------------------
+    test('Rejects when the password is incorrect (wrong password)', async () => {
+        /*
+        Fixture. Tests insert their own mock data in the database,
+        */
+        const mockData = await createSignedUpUser(signinWrongPasswordMockData, undefined, false)
+        const mockDataId = mockData._id.toString()
+        const previousLastAccessOn = mockData.lastAccessOn
+        const previousFailedLoginAttempts = mockData.failedLoginAttempts
+
+        const response = await supertest(app)
+            .post(signinRoute)
+            .send({ //Mock data has all the user fields, must send only email and password otherwise the signin endpoint will reject them
+                email: signinWrongPasswordMockData.email,
+                password: signinWrongPasswordMockData.password + '1*' //Add characters to make the password wrong
+            })
+
+        expect(response.status).toBe(401) //Expects an Ok http response
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+
+        /*
+        Delay a second to give a chance for the user's lastAccessOn and failedLoginAttempts data to update in the 
+        database, since these updates are asyncronous
+        */
+        await delay(delayTime)
+        // User's lastAccessOn and lastSuccessfulLoginOn must update
+        const signedInUser = await usersFindDbUtils.userFindById(mockDataId)
+        // Assert that the failedLongAttempts was increased by one
+        expect(signedInUser.failedLoginAttempts).toBe(previousFailedLoginAttempts + 1)
+        // Assert that the lastAccessOn is still a date type
+        let isDate = isValidDate(signedInUser.lastAccessOn)
+        expect(isDate).toBeTruthy()
+        // Assert that the last access date was updated
+        const lastAccessDateWasUpdated = (signedInUser.lastAccessOn > previousLastAccessOn)
+        expect(lastAccessDateWasUpdated).toBeTruthy()
+    })
+
+    test('Rejects and locks user when the password is incorrect and reached max number of login attempts', async () => {
+        /*
+        Fixture. Tests insert their own mock data in the database,
+        */
+        const mockData = await createSignedUpUser(
+            signinWrongPasswordLocksUserMockData, 
+            undefined, 
+            false, 
+            (numWrongPwdAttemptsToLockUser - 1) // User about to be locked due to failed login attempts
+        )
+        const mockDataId = mockData._id.toString()
+        const previousLastAccessOn = mockData.lastAccessOn
+        const previousFailedLoginAttempts = mockData.failedLoginAttempts
+
+        const response = await supertest(app)
+            .post(signinRoute)
+            .send({ //Mock data has all the user fields, must send only email and password otherwise the signin endpoint will reject them
+                email: signinWrongPasswordLocksUserMockData.email,
+                password: signinWrongPasswordLocksUserMockData.password + '1*' //Add characters to make the password wrong
+            })
+
+        expect(response.status).toBe(401) //Expects an Ok http response
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+
+        /*
+        Delay a second to give a chance for the user's lastAccessOn and failedLoginAttempts data to update in the 
+        database, since these updates are asyncronous
+        */
+        await delay(delayTime)
+        // User's lastAccessOn and lastSuccessfulLoginOn must update
+        const signedInUser = await usersFindDbUtils.userFindById(mockDataId)
+        // Assert that the failedLongAttempts was increased by one
+        expect(signedInUser.failedLoginAttempts).toBe(previousFailedLoginAttempts + 1)
+        // Assert that the lastAccessOn is still a date type
+        let isDate = isValidDate(signedInUser.lastAccessOn)
+        expect(isDate).toBeTruthy()
+        // Assert that the last access date was updated
+        const lastAccessDateWasUpdated = (signedInUser.lastAccessOn > previousLastAccessOn)
+        expect(lastAccessDateWasUpdated).toBeTruthy()
+        // Asert that user has been lock due to repeated login attempts
+        expect(signedInUser.status).toBe(userStatus.lockedFailedLogin)
+    })
+
 
     // ----------------------------- Grouping of user non-enabled status tests ---------------------------------------
 
@@ -130,7 +222,9 @@ describe('POST /sign-in', () => {
             /*
             Fixture. Tests insert their own mock data in the database, since it requires users with different statuses
             */
-            await createSignedUpUser(test.mockData, test.userStatus)
+            const mockData = await createSignedUpUser(test.mockData, test.userStatus, false)
+            const mockDataId = mockData._id.toString()
+            const previousLastAccessOn = mockData.lastAccessOn
 
             //Execute test
             const response = await supertest(app)
@@ -144,6 +238,21 @@ describe('POST /sign-in', () => {
                 status: expect.any(String),
                 message: expect.any(String)
             })
+
+            /* 
+            Delay a second to give a chance for the user's  lastAccessOn data to update in the database, 
+            since these dates updates are asyncronous
+            */
+            await delay(delayTime)
+            // User's lastAccessOn must update
+            // Check that the lastAccessOn is still a date type
+            const signedInUser = await usersFindDbUtils.userFindById(mockDataId)
+            let isDate = isValidDate(signedInUser.lastAccessOn)
+            expect(isDate).toBeTruthy()
+            // Check that the last access date is updated
+            const lastAccessDateWasUpdated = (signedInUser.lastAccessOn > previousLastAccessOn)
+            expect(lastAccessDateWasUpdated).toBeTruthy()
+
         } finally {
             // Teardown Mock data regardless of test result
             await deleteUser(test.mockData.email)
@@ -153,12 +262,19 @@ describe('POST /sign-in', () => {
     // ----------------------------- End of grouping of user non-enabled status tests ---------------------------------------
 
     test('Accepts sigin in when data is correct and returns token and user info', async () => {
+        /*
+        Fixture. Tests insert their own mock data in the database,
+        */
+        const mockData = await createSignedUpUser(signinSuccessMockData, undefined, false)
+        const mockDataId = mockData._id.toString()
+        const previousLastAccessOn = mockData.lastAccessOn
+        const previousLastSuccessfulLoginOn = mockData.lastSuccessfulLoginOn
 
         const response = await supertest(app)
             .post(signinRoute)
             .send({ //Mock data has all the user fields, must send only email and password otherwise the signin endpoint will reject them
-                email: signinMockData.email,
-                password: signinMockData.password
+                email: signinSuccessMockData.email,
+                password: signinSuccessMockData.password //Must send unencrypted password, do not use the password from the object obtained from the database as this password has been encrypted
             })
 
         expect(response.status).toBe(200) //Expects an Ok http response
@@ -178,6 +294,29 @@ describe('POST /sign-in', () => {
         // Assert that the _id is a valid DB id type.
         const isDbObjId = verifDbIdType(response.body.userInfo._id)
         expect(isDbObjId ).toBeTruthy()
+        // Asserts that the id corresponds with the signed in user id
+        expect(response.body.userInfo._id).toBe(mockDataId)
 
+        /*
+        Delay a second to give a chance for the user's lastAccessOn and lastSuccessfulLoginOn data to update in the database, 
+        since these dates updates are asyncronous
+        */
+        await delay(delayTime)
+        // User's lastAccessOn and lastSuccessfulLoginOn must update
+        const signedInUser = await usersFindDbUtils.userFindById(mockDataId)
+        // Assert that the failedLongAttempts was set to zero
+        expect(signedInUser.failedLoginAttempts).toBe(0)
+        // Assert that the lastAccessOn is still a date type
+        let isDate = isValidDate(signedInUser.lastAccessOn)
+        expect(isDate).toBeTruthy()
+        // Assert that the last access date was updated
+        const lastAccessDateWasUpdated = (signedInUser.lastAccessOn > previousLastAccessOn)
+        expect(lastAccessDateWasUpdated).toBeTruthy()
+        // Assert that the lastAccessOn is still a date type
+        isDate = isValidDate(signedInUser.lastSuccessfulLoginOn)
+        expect(isDate).toBeTruthy()
+        // Assert that the last access date was updated
+        const lastSuccessfulLoginOnWasUpdated = (signedInUser.lastSuccessfulLoginOn > previousLastSuccessfulLoginOn)
+        expect(lastSuccessfulLoginOnWasUpdated).toBeTruthy()
     })
 })

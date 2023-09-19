@@ -15,6 +15,13 @@ module.exports = {
         lastName: 'Last Name',
         receiveEmails: true //All props have values in the expected format
     },
+    usersGetMockDataSuccess: {
+        email: 'usersGetMockDataSuccess@mock.com', //Email is different from others used on other test to avoid database conflicts
+        password: 'pwdMock11*',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        receiveEmails: true //All props have values in the expected format
+    },
     usersGetMockDataNotFound: {
         email: 'usersGetMockDataNotFound@mock.com', //Email is different from others used on other test to avoid database conflicts
         password: 'pwdMock11*',
@@ -37,7 +44,7 @@ module.exports = {
         receiveEmails: true //All props have values in the expected format
     },
     usersGetNotEnbMockData: {
-        email: 'sersGetNotEblMockData', //Email is different from others used on other test to avoid database conflicts
+        email: 'usersGetNotEblMockData', //Email is different from others used on other test to avoid database conflicts
         password: 'pwdMock11*',
         firstName: 'First Name',
         lastName: 'Last Name',

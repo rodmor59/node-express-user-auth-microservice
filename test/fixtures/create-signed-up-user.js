@@ -15,8 +15,9 @@ database (Since the system sabes encrypted passwords in the database)
 */
 const createSignedUpUser = async (
     userData,
-    usrStatus = userStatus.enabled,
-    setlastSuccessfulLoginOn = false
+    usrStatus = userStatus.enabled, // May create a mock user with a status different than enabled (Pending, Lockeck, etc.)
+    setlastSuccessfulLoginOn = false, // Has the option to set the last successful login on date, which in effect is a mock user that has logged in
+    failedLoginAttempts = 0 // User may be created with a number of failed login attempts for testing purposes. Default is 0.
 ) => {
 
     const currentDate = new Date()
@@ -33,12 +34,14 @@ const createSignedUpUser = async (
     const newUser = await UserModel.create({
         ...userData,
         password: encryptedPwd, //Password is saved to the database encrypted
-        status: usrStatus, //Not relevant for test but must pass it as the Schema requires it. Any string value will suffice.
-        failedLoginAttempts: 0, //Not relevant for test but must pass it as the Schema requires it
-        lastAccessOn: currentDate, //Not relevant for test but must pass it as the Schema requires it
-        lastSuccessfulLoginOn: lastSuccessfulLoginOn //Not relevant for test but must pass it as the Schema requires it
+        status: usrStatus,
+        failedLoginAttempts: failedLoginAttempts,
+        createdOn: currentDate,
+        userDataUpdatedOn: currentDate,
+        lastAccessOn: currentDate,
+        lastSuccessfulLoginOn: lastSuccessfulLoginOn
     })
-    return newUser._id
+    return newUser.toObject() // Return the complete user data
 }
 
 //Default export

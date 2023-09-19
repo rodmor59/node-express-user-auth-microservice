@@ -8,6 +8,20 @@ module.exports = {
         lastName: 'Last Name',
         receiveEmails: true //All props have values in the expected format
     },
+    signinWrongPasswordMockData: {
+        email: 'signinwrongpwd@mock.com', //Email is different from others used on other test to avoid database conflicts
+        password: 'pwdMock11*',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        receiveEmails: true //All props have values in the expected format
+    },
+    signinWrongPasswordLocksUserMockData: {
+        email: 'signinwrongpwdlockuser@mock.com', //Email is different from others used on other test to avoid database conflicts
+        password: 'pwdMock11*',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        receiveEmails: true //All props have values in the expected format
+    },
     signinPendingMockData: {
         email: 'signinpending@mock.com', //Email is different from others used on other test to avoid database conflicts
         password: 'pwdMock11*',
@@ -24,6 +38,13 @@ module.exports = {
     },
     signinNotEnbMockData: {
         email: 'signinnotenb@mock.com', //Email is different from others used on other test to avoid database conflicts
+        password: 'pwdMock11*',
+        firstName: 'First Name',
+        lastName: 'Last Name',
+        receiveEmails: true //All props have values in the expected format
+    },
+    signinSuccessMockData: {
+        email: 'signinsuccess@mock.com', //Email is different from others used on other test to avoid database conflicts
         password: 'pwdMock11*',
         firstName: 'First Name',
         lastName: 'Last Name',

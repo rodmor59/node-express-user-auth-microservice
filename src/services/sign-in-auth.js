@@ -41,7 +41,7 @@ module.exports.authentication = async (email, password) => {
     }
 
     // At this point user has complied will all requisites for a successful sign in
-    // Update the failid login attempts to zero and the last date of successful login
+    // Update the failed login attempts to zero and the last date of successful login
     updateSuccessfulLogin(user._id)
 
     //Sucess!

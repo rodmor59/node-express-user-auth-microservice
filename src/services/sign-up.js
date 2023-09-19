@@ -24,8 +24,6 @@ module.exports.signup = async (userData) => {
         }
     }
 
-    //Get the current date
-    const nowDate = new Date()
     //Encrypt password
     userData.password = await encryptPwd(userData.password)
     //Create the new user
