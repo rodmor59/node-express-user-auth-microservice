@@ -229,13 +229,13 @@ describe('POST /sign-up', () => {
         // Assert that the new user data was saved in the database with the information sent in the request
         const signedUpUser = await usersFindDbUtils.userFindById(response.body.newUserId)
         // Assert response prop with specific values
-        expect(signedUpUser.email).toBe(signupMockData.email),
-        expect(signedUpUser.firstName).toBe(signupMockData.firstName),
-        expect(signedUpUser.lastName).toBe(signupMockData.lastName),
-        expect(signedUpUser.receiveEmails).toBe(signupMockData.receiveEmails),
-        expect(signedUpUser.status).toBe(userStatus.enabled), //For the moment, the initial status of a signedUp user is Enabled
-        expect(signedUpUser.failedLoginAttempts).toBe(0),
-        expect(signedUpUser.lastSuccessfulLoginOn).toBe(null),
+        expect(signedUpUser.email).toBe(signupMockData.email)
+        expect(signedUpUser.firstName).toBe(signupMockData.firstName)
+        expect(signedUpUser.lastName).toBe(signupMockData.lastName)
+        expect(signedUpUser.receiveEmails).toBe(signupMockData.receiveEmails)
+        expect(signedUpUser.status).toBe(userStatus.enabled) //For the moment, the initial status of a signedUp user is Enabled
+        expect(signedUpUser.failedLoginAttempts).toBe(0)
+        expect(signedUpUser.lastSuccessfulLoginOn).toBe(null)
         // Assert props in the response that y have any value
         expect(signedUpUser).toMatchObject({
             password: expect.any(String), // Password is encrypted and is supposed to be a secret, even for testing

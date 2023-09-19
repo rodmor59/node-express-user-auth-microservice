@@ -7,10 +7,12 @@ const {
 
 module.exports = {
     increaseFailedLoginAttempts: (user) => {
+        // Sets updated user failed login attempts
+        const updatedFailedLoginAttempts = user.failedLoginAttempts + 1
         let dataToUpdate = {
-            failedLoginAttempts: user.failedLoginAttempts + 1
+            failedLoginAttempts: updatedFailedLoginAttempts
         }
-        if (user.failedLoginAttempts === numWrongPwdAttemptsToLockUser) {
+        if (updatedFailedLoginAttempts === numWrongPwdAttemptsToLockUser) { // on this attempt, failed logins have reached the lock user threshold
             dataToUpdate = {
                 ...dataToUpdate,
                 status: userStatus.lockedFailedLogin
@@ -36,6 +38,18 @@ module.exports = {
             {
                 failedLoginAttempts: 0, //Resets failed login attempts to zero, since login was successful
                 lastSuccessfulLoginOn: timeStamp,
+                lastAccessOn: timeStamp
+            }
+        )
+        //returns the timeStamp used to update lastSuccessfulLoginOn and lastAccessOn
+        return timeStamp
+    },
+    updateUserDataUpdatedOn: (_id) => {
+        const timeStamp = new Date()
+        userDBService.updateOne(
+            { _id: _id },
+            {
+                userDataUpdatedOn: timeStamp,
                 lastAccessOn: timeStamp
             }
         )
