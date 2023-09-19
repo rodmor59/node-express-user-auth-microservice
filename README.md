@@ -44,10 +44,11 @@ This project aims to:
 * Signup.
 * Signin (Login).
 * Get user data.
+* Edit user data.
 
 ### User data
 
-* Passwords saved in users' documents are hash encrypted.
+* Passwords are hash encrypted prior to saving user data.
 * User documents register the number of failed login attempts, when a threshold is reached the user changed status to locked.
 * The API records the following dates for user documents: date of creation, date of last user data update, last access date, and last successful login date.
 
@@ -60,7 +61,7 @@ This project aims to:
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
 * Environment variables file segregated from the API Source code.
 * Testing configuration and tests with Jest. It also includes HTTP server testing with the "supertest" library.
-* Include testing to ensure that user data sent to data creation and modification endpoints is correctly saved in the database. To this end, the test access the database directly and compare saved data against expected results.
+* Include testing to ensure that user data sent to data creation and modification endpoints is correctly saved in the database. To this end, the test access the database directly and compare saved data against expected results. Among these database test are data comparison tests, user log dates updates and user status updates.
 
 <!--
 (#Planned Features)
@@ -72,7 +73,6 @@ This project aims to:
 
 * Signup email confirmation.
 * Signup resend email confirmation.
-* Edit user data.
 * Delete user.
 * Change password.
 * Autorization check (Token validation).
@@ -228,7 +228,7 @@ README.md
         ├── encrypt-pwd.js
         ├── res-error.js
         ├── sign-jwt-token.js
-        ├── user-dates-update.js
+        ├── user-updates.js
         └── [validators]
             ├── sign-in.js
             ├── sign-up.js
@@ -242,7 +242,8 @@ README.md
         ├── [mock-data]
             ├── sign-in.js
             ├── sign-up.js
-            └── users.js
+            ├── users-get.js
+            └── users-patch.js
         └── sign-mock-jwt.js
     ├── [setup]
         ├── parameters.js
@@ -252,9 +253,11 @@ README.md
     ├── [test-end-to-end]
         ├── sign-in.test.js
         ├── sign-up.test.js
-        └── users.test.js
+        ├── users.get.test.js
+        └── users.patch.test.js
     └── [utils]
         ├── db-find-users.js
+        ├── delay.js
         ├── verif-db-id-type.js
         └── verif-types.js
 ```
