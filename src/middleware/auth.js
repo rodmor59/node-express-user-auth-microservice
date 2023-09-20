@@ -10,6 +10,7 @@ const sendError = require('../utils/res-error')
 const errMsgNoTokenReceived = 'No token was received' 
 const errMsgJWTAuthFail = 'Token authentication failed' 
 const errMsgUserIdNoMatch = 'Token was not issued with the requested user id' 
+const errMsgTokenOpTypeNoMatch = 'Invalid token for this operation'
 
 module.exports = {
     localAuthMiddleware: (req, res, next) => {
@@ -41,61 +42,70 @@ module.exports = {
         })(req, res, next)
     },
 
-    jwtAuthMiddleware: (req, res, next) => {
+    jwtAuthMiddleware: (tokenOpType, idIsIncludedInParams = true) => {
+        return (req, res, next) => {
 
-        const authHeader = req.headers.authorization
+            const authHeader = req.headers.authorization
 
-        //Before authentication, check that the client sent the Authorization header
-        if (!authHeader){
-            //Send an error
-            return sendError(400, statusTxt.statusFailed, errMsgNoTokenReceived, null, res)
+            //Before authentication, check that the client sent the Authorization header
+            if (!authHeader) {
+                //Send an error
+                return sendError(400, statusTxt.statusFailed, errMsgNoTokenReceived, null, res)
+            }
+
+            passport.authenticate('jwt', { session: false }, async (err, decodedToken, /*info*/) => {
+                if (err) {
+                    console.error(err)
+                    return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res)
+                }
+                if (!decodedToken) {
+                    return sendError(401, statusTxt.statusFailed, errMsgJWTAuthFail, null, res)
+                }
+
+                /* Following a standard for a JWT authentication strategy, it only concern is validating
+                the JWT token, including if its signature is valid, that its payload include the userId in an adecuate
+                document id format.
+    
+                Following successful JWT authentication a series of additional non-token related checks are performed.
+                */
+
+                // The opType encoded in the token must match the opType which the middleware is being called
+                if (tokenOpType !== decodedToken.opType) {
+                    return sendError(401, statusTxt.statusFailed, errMsgTokenOpTypeNoMatch, null, res) // Token is not authorized for this opType
+                }
+
+                if (idIsIncludedInParams) { // Middleware function must has been called with param indicating to check id
+                    // Checks that the userId included in the token's payload matches the id receives in the params
+                    if (decodedToken.userId !== req.params.id) {
+                        return sendError(401, statusTxt.statusFailed, errMsgUserIdNoMatch, null, res) // Token is not authorized for the user id send in the params
+                    }
+                }
+                // Check that user id received in the token's payload is registered in the system
+                const userCheck = await getUserById(decodedToken.userId)
+                if (!userCheck.success) {
+                    return sendError(userCheck.httpStatusCode, statusTxt.statusFailed, userCheck.payload.message, null, res)
+                }
+                // Sets a const with the user obtained fron the DB.
+                const dbUser = userCheck.payload.user
+                /* 
+                A successful user access has ocurred.
+                
+                The following line uptades the user's last access date in the database. Also, it ubpdates the
+                lastAccessOn the user object that we have loaded in memory, this saves another access to the 
+                database to update the dbUser object.
+                
+                */
+                dbUser.lastAccessOn = updateLastAccessOn(dbUser._id)
+                // Check that the user is in enabled status
+                const userStatusCheck = checkUserAuthStatus(dbUser) //Function must be called with the entire user object
+                if (!userStatusCheck.success) {
+                    // Return error
+                    return sendError(userStatusCheck.httpStatusCode, statusTxt.statusFailed, userStatusCheck.payload.message, null, res)
+                }
+                // User has passed all checks
+                req.user = dbUser //Pass to next with the name user instead of dbUser
+                next()
+            })(req, res, next)
         }
-
-        passport.authenticate('jwt', { session: false }, async (err, user, /*info*/) => {
-            if (err) {
-                console.error(err)
-                return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res)
-            }
-            if (!user) {
-                return sendError(401, statusTxt.statusFailed, errMsgJWTAuthFail, null, res)
-            }
-
-            /* Following a standard for a JWT authentication strategy, it only concern is validating
-            the JWT token, including if its signature is valid, that its payload include the userId in an adecuate
-            document id format.
-
-            Following successful JWT authentication a series of additional non-token related checks are performed.
-            */
-
-            // Checks that the userId included in the token's payload matches the id receives in the params
-            if (user.userId !== req.params.id){
-                return sendError(400, statusTxt.statusFailed, errMsgUserIdNoMatch, null, res)
-            }
-            // Check that user id received in the token's payload is registered in the system
-            const userCheck = await getUserById(user.userId)
-            if (!userCheck.success) {
-                return sendError(userCheck.httpStatusCode, statusTxt.statusFailed, userCheck.payload.message, null, res)
-            }
-            // Sets a const with the user obtained fron the DB. Named dbUser not to be confused with the user received from the passport Authenticate JWT Strategy
-            const dbUser = userCheck.payload.user
-            /* 
-            A successful user access has ocurred.
-            
-            The following line uptades the user's last access date in the database. Also, it ubpdates the
-            lastAccessOn the user object that we have loaded in memory, this saves another access to the 
-            database to update the dbUser object.
-            
-            */
-            dbUser.lastAccessOn = updateLastAccessOn(dbUser._id)
-            // Check that the user is in enabled status
-            const userStatusCheck = checkUserAuthStatus(dbUser) //Function must be called with the entire user object
-            if (!userStatusCheck.success) {
-                // Return error
-                return sendError(userStatusCheck.httpStatusCode, statusTxt.statusFailed, userStatusCheck.payload.message, null, res)
-            }
-            // User has passed all checks
-            req.user = dbUser //Pass to next with the name user instead of dbUser
-            next()
-        })(req, res, next)
     },
 }

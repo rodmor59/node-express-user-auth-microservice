@@ -13,7 +13,7 @@ const createUser = async (signUpdata) => {
         ...signUpdata,
         status: tstSignUpUsrStatus, //Not relevant for test but must pass it as the Schema requires it. Any string value will suffice.
         failedLoginAttempts: 0, //Not relevant for test but must pass it as the Schema requires it
-        })
+    })
 }
 
 //Default export

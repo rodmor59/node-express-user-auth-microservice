@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken')
 const supertest = require('supertest')
 
 const app = require('../../src/app') //The app that will be tested.
-const { delayTime, numWrongPwdAttemptsToLockUser, userStatus } = require('../setup/parameters') //The testing parameters
+const { delayTime, ...testParameters } = require('../setup/parameters') //The testing parameters
 const { signinMockData,
     signinWrongPasswordMockData,
     signinWrongPasswordLocksUserMockData,
@@ -157,7 +157,7 @@ describe('POST /sign-in', () => {
             signinWrongPasswordLocksUserMockData, 
             undefined, 
             false, 
-            (numWrongPwdAttemptsToLockUser - 1) // User about to be locked due to failed login attempts
+            (testParameters.numWrongPwdAttemptsToLockUser - 1) // User about to be locked due to failed login attempts
         )
         const mockDataId = mockData._id.toString()
         const previousLastAccessOn = mockData.lastAccessOn
@@ -192,7 +192,7 @@ describe('POST /sign-in', () => {
         const lastAccessDateWasUpdated = (signedInUser.lastAccessOn > previousLastAccessOn)
         expect(lastAccessDateWasUpdated).toBeTruthy()
         // Asert that user has been lock due to repeated login attempts
-        expect(signedInUser.status).toBe(userStatus.lockedFailedLogin)
+        expect(signedInUser.status).toBe(testParameters.userStatus.lockedFailedLogin)
     })
 
 
@@ -203,13 +203,13 @@ describe('POST /sign-in', () => {
             mockData: signinPendingMockData,
             testDescription: 'Rejects when the user is in pending status',
             expectedRespStatus: 490, //The application uses a custom http response code
-            userStatus: userStatus.pending
+            userStatus: testParameters.userStatus.pending
         },
         {
             mockData: signinLockFailPwdMockData,
             testDescription: 'Rejects when the user is locked due to multiple failed signin attemps',
             expectedRespStatus: 491, //The application uses a custom http response code
-            userStatus: userStatus.lockedFailedLogin
+            userStatus: testParameters.userStatus.lockedFailedLogin
         },
         {
             mockData: signinNotEnbMockData,
@@ -287,16 +287,27 @@ describe('POST /sign-in', () => {
             }
         })
 
-        // Assert that the signinToken is a properly formed signin JWT token
-        const isVerified = jwt.verify(response.body.signinJWT.replace('Bearer ', ''), process.env.JWT_SECRET_SIGNIN)
-        expect(isVerified).toBeTruthy()
-
         // Assert that the _id is a valid DB id type.
         const isDbObjId = verifDbIdType(response.body.userInfo._id)
         expect(isDbObjId ).toBeTruthy()
         // Asserts that the id corresponds with the signed in user id
         expect(response.body.userInfo._id).toBe(mockDataId)
 
+        // Assert that the signinToken is a properly formed signin JWT token
+        const tokenPayload = jwt.verify(response.body.signinJWT.replace('Bearer ', ''), process.env.JWT_SECRET)
+        expect(tokenPayload).toBeTruthy() // There is a payload, meaning verification succeeded
+
+        // Assert that token's payload contains the opType and user id
+        expect(tokenPayload).toMatchObject({ 
+            opType: expect.any(String),
+            userId: expect.any(String),
+        })
+        // Assert that the opType is 'signin'
+        expect(tokenPayload.opType).toBe(testParameters.tokenOpType.signin)
+
+        // Assert that the userId equals the userInfo._id received in the response
+        expect(tokenPayload.userId).toBe(response.body.userInfo._id)
+        
         /*
         Delay a second to give a chance for the user's lastAccessOn and lastSuccessfulLoginOn data to update in the database, 
         since these dates updates are asyncronous

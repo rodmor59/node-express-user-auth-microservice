@@ -155,8 +155,9 @@ Local MongoDB URL:
 Cloud Atlas MongoDB URI:  
 `mongodb+srv://<Cloud Atlas database username>:<Cloud Atlas database password@appcluster0.ckkhqvp.mongodb.net/<Name of the database>?retryWrites=true&w=majority`
 
-**`JWT_SECRET_SIGNIN`**
-Random hex secret key required to issue the JWT Tokens for user signin (64 characters or more recommended).
+**`JWT_SECRET`**
+Random hex secret key required to issue the JWT Tokens for user signin, email confirmation, passwords resets or any other
+operation (64 characters or more recommended).
 
 This project includes a .env.template file that you may fill and then rename to .env.
 

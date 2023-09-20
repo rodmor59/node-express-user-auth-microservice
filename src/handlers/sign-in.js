@@ -1,5 +1,5 @@
 const signJWT = require('../utils/sign-jwt-token')
-const appParameters = require('../config/parameters')
+const { messages, tokenOpTypes } = require('../config/parameters')
 
 //---- signin  success
 /* 
@@ -20,11 +20,14 @@ module.exports.signinSuccess = async function (req, res, next) {
         if (!resultAuth?.payload?.userInfo?._id) {
             /*resultAuth.userInfo._id was not received in the request object, since this function executes after 
             a middleware that is supposed to attach it, some internal error must have occured*/
-            return res.status(500).json({error: appParameters.messages.msgInternalError})
+            return res.status(500).json({error: messages.msgInternalError})
         }
 
         //No internal errors occurred, proceed with JWT signing
-        const JWT = signJWT({ userId: resultAuth.payload.userInfo._id })
+        const JWT = signJWT({ 
+            userId: resultAuth.payload.userInfo._id,
+            opType: tokenOpTypes.signin // Encode opType Signin in the token's payload
+        })
         
         //Send a successful response, with the resultAuth payload plus signinToken
         res.status(resultAuth.httpStatusCode).json({
@@ -34,6 +37,6 @@ module.exports.signinSuccess = async function (req, res, next) {
     }
     catch (error) {
         console.error(error)
-        next({ error: error, message: appParameters.messages.msgErrSendToClient })
+        next({ error: error, message: messages.msgErrSendToClient })
     }
 }

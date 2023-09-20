@@ -31,6 +31,16 @@ module.exports = {
         statusFailed: 'Failed',
         statusCompleted: 'Success'
     },
+
+    /*
+    Token types to be encoded in the tokens' payload to differentiate for different opearions
+    */
+    tokenOpTypes: {
+        signin: 'signin',
+        signupVerification: 'signup-verification',
+        passwordReset: 'password-reset'
+    },
+
     /*
     Values for the user status.
     Changes to these values after there are users registered in the database will require admin to update the old 
