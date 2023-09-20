@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const app = require('../../src/app') //The app that will be tested.
 const { delayTime, userStatus } = require('../setup/parameters') //The testing parameters
 const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixture
-const signMockJWT = require('../fixtures/sign-mock-jwt')
+const { signMockJWT, signMockJWTUserSignin } = require('../fixtures/sign-mock-jwt')
 const usersFindDbUtils = require('../utils/db-find-users')
 const { isValidDate } = require('../utils/verif-types')
 const delay = require('../utils/delay')
@@ -45,9 +45,8 @@ describe('PATCH /users/:id', () => {
         // Saves a Mock user to the database
         mockDataUserId = (await createSignedUpUser(usersPatchMockData,undefined,true))._id.toString()
         // Signs a token with the new user id
-        usersPatchMockJWT = signMockJWT(
+        usersPatchMockJWT = signMockJWTUserSignin(
             {userId: mockDataUserId},
-            process.env.JWT_SECRET_SIGNIN, //Uses the signin secret (That is what is being tested)
             '2m' //More than enough time to execute this suite of tests
         ) 
     })
@@ -195,7 +194,7 @@ describe('PATCH /users/:id', () => {
     })
     test('Rejects when token has expired', async () => {
         //Sign a token that inmediately expires
-        const jwtToSend = signMockJWT({userId: mockDataUserId}, process.env.JWT_SECRET_SIGNIN, '0s')
+        const jwtToSend = signMockJWTUserSignin({userId: mockDataUserId}, '0s')
 
         const response = await supertest(app)
             .patch(`${usersRoute}/${mockDataUserId}`)
@@ -208,9 +207,54 @@ describe('PATCH /users/:id', () => {
             message: expect.any(String)
         })
     })
+    test('Rejects when token is valid but the payload does not include an opType', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId}, '30s') // Token payload doesn't include the opType
+
+        const response = await supertest(app)
+            .patch(`${usersRoute}/${mockDataUserId}`)
+            .set('authorization', `Bearer ${jwtToSend}`)
+            .send(usersPatchMockDataUpdates)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
+    test('Rejects when token is valid, the payload include a opType, but the opType is not a string)', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId , opType: true}, '30s') // Token payload includes the opType but it is not a string
+
+        const response = await supertest(app)
+            .patch(`${usersRoute}/${mockDataUserId}`)
+            .set('authorization', `Bearer ${jwtToSend}`)
+            .send(usersPatchMockDataUpdates)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
+    test('Rejects when token is valid, but the payload the wrong opType)', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId , opType: 'Wrong op type'}, '30s') // Token payload includes the opType that is a string but it is not the 'signin' opType
+
+        const response = await supertest(app)
+            .patch(`${usersRoute}/${mockDataUserId}`)
+            .set('authorization', `Bearer ${jwtToSend}`)
+            .send(usersPatchMockDataUpdates)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
     test('Rejects when token is valid but the payload does not include the user Id', async () => {
         //Sign a token without the userId prop
-        const jwtToSend = signMockJWT({missSpelledUserIdProp: mockDataUserId}, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+        const jwtToSend = signMockJWTUserSignin({missSpelledUserIdProp: mockDataUserId}, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
         const response = await supertest(app)
             .patch(`${usersRoute}/${mockDataUserId}`)
@@ -225,7 +269,7 @@ describe('PATCH /users/:id', () => {
     })
     test('Rejects when token is valid, the payload include the userId but in the wrong format (Not a document id)', async () => {
         //Sign a token with an invalid value for the userId
-        const jwtToSend = signMockJWT({userId: 'not a document id'}, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+        const jwtToSend = signMockJWTUserSignin({userId: 'not a document id'}, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
         const response = await supertest(app)
             .patch(`${usersRoute}/${mockDataUserId}`)
@@ -243,14 +287,14 @@ describe('PATCH /users/:id', () => {
             // Create a second signed up user and get its user id
             const mockDataSecondUserId = (await createSignedUpUser(usersPatchMockDataSecond, undefined, true))._id.toString()
             // Sign a token with this user id, which is different than the id of mockDataUser
-            const jwtToSend = signMockJWT({ userId: mockDataSecondUserId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            const jwtToSend = signMockJWTUserSignin({ userId: mockDataSecondUserId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
             const response = await supertest(app)
                 .patch(`${usersRoute}/${mockDataUserId}`) //Send as param in the route an id different than the one used to sign the token
                 .set('authorization', `Bearer ${jwtToSend}`)
                 .send(usersPatchMockDataUpdates)
 
-            expect(response.status).toBe(400) //This is a bad request, the user is requested with a token not signed with it's id
+            expect(response.status).toBe(401) //This is a bad request, the user is requested with a token not signed with it's id
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
                 status: expect.any(String),
                 message: expect.any(String)
@@ -265,7 +309,7 @@ describe('PATCH /users/:id', () => {
             // Create a signed up user and get its user id
             const mockDataId = (await createSignedUpUser(usersPatchMockDataNotFound, undefined, true))._id.toString()
             // Sign a token with this user id, which is different than the id of mockDataUser
-            const jwtToSend = signMockJWT({ userId: mockDataId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            const jwtToSend = signMockJWTUserSignin({ userId: mockDataId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
             // Delete the user from the database
             await deleteUser(usersPatchMockDataNotFound.email)
 
@@ -314,7 +358,7 @@ describe('PATCH /users/:id', () => {
             const mockDataId = createdUser._id.toString()
             const previousLastAccessOn = createdUser.lastAccessOn
             // Sign a token with this user id, which is different than the id of mockDataUser
-            const jwtToSend = signMockJWT({ userId: mockDataId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            const jwtToSend = signMockJWTUserSignin({ userId: mockDataId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
             
             //Execute test
             const response = await supertest(app)
@@ -358,7 +402,7 @@ describe('PATCH /users/:id', () => {
             const previousLastAccessOn = createdUser.lastAccessOn
             const previousUserDataUpdatedOn = createdUser.userDataUpdatedOn
             // Sign a token with this user id, which is different than the id of mockDataUser
-            const jwtToSend = signMockJWT({ userId: mockDataId }, process.env.JWT_SECRET_SIGNIN, '30s') //Note: The expiration time is greater to avoid rejections for this cause
+            const jwtToSend = signMockJWTUserSignin({ userId: mockDataId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
             const response = await supertest(app)
                 .patch(`${usersRoute}/${mockDataId}`)

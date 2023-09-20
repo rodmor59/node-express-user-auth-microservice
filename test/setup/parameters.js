@@ -2,6 +2,14 @@
 module.exports = {
 
     /*
+    Token types to be encoded in the tokens' payload to differentiate for different opearions
+    */
+    tokenOpType: {
+        signin: 'signin',
+        signupVerification: 'signup-verification',
+        passwordReset: 'password-reset'
+    },
+    /*
     Testing values for the user status.
     Must correspond to the values used by the application, otherwise tests that uses them will fail
     */

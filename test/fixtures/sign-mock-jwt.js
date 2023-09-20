@@ -1,13 +1,29 @@
 const jwt = require('jsonwebtoken')
 
-//This function allows to create JWT tokens with any key and expiration time for testing purposes
-const signMockJWT = (payload, secretKey, expirationTime) => {
+const { tokenOpType } = require('../setup/parameters') //The testing parameters
+
+const signMockJWT = (payload, expirationTime) => {
     return jwt.sign(
         payload,
-        secretKey,
+        process.env.JWT_SECRET,
         {
             expiresIn: expirationTime
         })
 }
 
-module.exports = signMockJWT
+const signMockJWTUserSignin = (payload, expirationTime) => {
+    return jwt.sign(
+        {
+            ...payload,
+            opType: tokenOpType.signin
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: expirationTime
+        })
+}
+
+module.exports = {
+    signMockJWT,
+    signMockJWTUserSignin
+}
