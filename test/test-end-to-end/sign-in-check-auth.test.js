@@ -3,7 +3,7 @@ const supertest = require('supertest')
 const app = require('../../src/app') //The app that will be tested.
 const { delayTime, userStatus } = require('../setup/parameters') //The testing parameters
 const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixture
-const { signMockJWTUserSignin } = require('../fixtures/sign-mock-jwt')
+const { signMockJWT, signMockJWTUserSignin } = require('../fixtures/sign-mock-jwt')
 const { isValidDate } = require('../utils/verif-types')
 const usersFindDbUtils = require('../utils/db-find-users')
 const delay = require('../utils/delay')
@@ -91,6 +91,48 @@ describe('GET /sign-in/check-auth', () => {
             message: expect.any(String)
         })
     })
+    test('Rejects when token is valid but the payload does not include an opType', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId}, '30s') // Token payload doesn't include the opType
+
+        const response = await supertest(app)
+            .get(route)
+            .set('authorization', `Bearer ${jwtToSend}`)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
+    test('Rejects when token is valid, the payload include a opType, but the opType is not a string)', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId , opType: true}, '30s') // Token payload includes the opType but it is not a string
+
+        const response = await supertest(app)
+            .get(route)
+            .set('authorization', `Bearer ${jwtToSend}`)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
+    test('Rejects when token is valid, but the payload the wrong opType)', async () => {
+        
+        const jwtToSend = signMockJWT({userId: mockDataUserId , opType: 'Wrong op type'}, '30s') // Token payload includes the opType that is a string but it is not the 'signin' opType
+
+        const response = await supertest(app)
+            .get(route)
+            .set('authorization', `Bearer ${jwtToSend}`)
+
+        expect(response.status).toBe(401)
+        expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
+            status: expect.any(String),
+            message: expect.any(String)
+        })
+    })
     test('Rejects when token is valid but the payload does not include the user Id', async () => {
         //Sign a token without the userId prop
         const jwtToSend = signMockJWTUserSignin({missSpelledUserIdProp: mockDataUserId}, '30s') //Note: The expiration time is greater to avoid rejections for this cause
@@ -129,7 +171,7 @@ describe('GET /sign-in/check-auth', () => {
             await deleteUser(signinCheckAuthMockDataNotFound.email)
 
             const response = await supertest(app)
-                .get(`${route}/${mockDataId}`)
+                .get(route)
                 .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(404) //Not found
@@ -176,7 +218,7 @@ describe('GET /sign-in/check-auth', () => {
             
             //Execute test
             const response = await supertest(app)
-                .get(`${route}/${mockDataId}`)
+                .get(route)
                 .set('authorization', `Bearer ${jwtToSend}`)
             expect(response.status).toBe(test.expectedRespStatus)
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -196,7 +238,6 @@ describe('GET /sign-in/check-auth', () => {
             // Check that the last access date is updated
             const lastAccessDateWasUpdated = (accessedUser.lastAccessOn > previousLastAccessOn)
             expect(lastAccessDateWasUpdated).toBeTruthy()
-
         } finally {
             // Teardown Mock data regardless of test result
             await deleteUser(test.mockData.email)
@@ -214,7 +255,7 @@ describe('GET /sign-in/check-auth', () => {
             const previousLastAccessOn = successMockUserObj.lastAccessOn
 
             const response = await supertest(app)
-                .get(`${route}/${mockUserId}`)
+                .get(route)
                 .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(200) //Expects an Ok http response
@@ -228,11 +269,13 @@ describe('GET /sign-in/check-auth', () => {
             since these dates updates are asyncronous
             */
             await delay(delayTime)
-            // Check that the last access date was updated
-            const accessedUserLastAccessOn = new Date(response.body.user.lastAccessOn)
-            const lastAccessDateWasUpdated = (accessedUserLastAccessOn > previousLastAccessOn)
+            // Check that the lastAccessOn is still a date type
+            const accessedUser = await usersFindDbUtils.userFindById(mockUserId)
+            let isDate = isValidDate(accessedUser.lastAccessOn)
+            expect(isDate).toBeTruthy()
+            // Check that the last access date is updated
+            const lastAccessDateWasUpdated = (accessedUser.lastAccessOn > previousLastAccessOn)
             expect(lastAccessDateWasUpdated).toBeTruthy()
-
         }
         finally {
             // Teardown Mock data regardless of test result

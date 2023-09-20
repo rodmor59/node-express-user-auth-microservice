@@ -45,6 +45,7 @@ This project aims to:
 * Signin (Login).
 * Get user data.
 * Edit user data.
+* Autorization check (Token validation) for usersign operation type.
 
 ### User data
 
@@ -55,7 +56,9 @@ This project aims to:
 ### Technical features
 
 * Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client send login and password once. Then, they can use the token for authentication until it expires).
-* Route protection with Passport, with a JWT token strategy. JWT Token is acquired through signin, which uses a passport local strategy, then, after receiving the token, further access is validated with a passport JWT Strategy.
+* Route protection with Passport, with a JWT token strategy. JWT Tokens are acquired through signin (which uses a passport local strategy), at signup (for email verification), when requesting a password reset, or other operation. Afterward, the 
+client must send appropiate tokens to gain access to protected routes.
+* Operation types are signed on tokens such as signin, signup signup verification (email confirmation) and password resets. As a result, tokens issued for one purpose cannot be used for another.
 * Schama based request data validation with middleware functions that execute before handlers.
 * The endpoints follows a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
@@ -75,7 +78,8 @@ This project aims to:
 * Signup resend email confirmation.
 * Delete user.
 * Change password.
-* Autorization check (Token validation).
+* Autorization check (Token validation) for email confirmation operation type.
+* Autorization check (Token validation) for password reset operation type.
 * Password send reset code.
 * Password reset.
 
@@ -202,7 +206,7 @@ README.md
         ├── passport-config.js
         └── passport-strategies.js
     ├── [handlers]
-        ├── sign-in-success.js
+        ├── sign-in.js
         ├── sign-up.js
         └── users.js
     ├── [middleware]
@@ -241,6 +245,7 @@ README.md
         ├── create-signed-up-user.js
         ├── create-user.js
         ├── [mock-data]
+            ├── sign-in-check-auth.js
             ├── sign-in.js
             ├── sign-up.js
             ├── users-get.js
@@ -252,6 +257,7 @@ README.md
     ├── [teardowns]
         └── delete-user.js
     ├── [test-end-to-end]
+        ├── sign-in-check-auth.test.js
         ├── sign-in.test.js
         ├── sign-up.test.js
         ├── users.get.test.js

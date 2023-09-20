@@ -11,7 +11,7 @@ console.log('Sign in routes loaded')
 
 //---- routing to user sign-in (Login)
 router.post(
-    '/sign-in', 
+    '/sign-in',
     ReqValidations.validateSigninFields,
     localAuthMiddleware, //Since this is a sign-in route with username and password its only purpose is to authenticate and retur the token (It doesn't require further handling)
     signinHandler.signinSuccess
@@ -21,6 +21,7 @@ router.post(
 router.get(
     '/sign-in/check-auth', // This route doesn't receive params or body, only the token to validate in the header
     jwtAuthMiddleware(tokenOpTypes.signin, false), // Middleware will not check that the user id is send in the route params, as this route doesn't requires require it
+    signinHandler.checkAuthSuccess
 )
 
 module.exports = router
