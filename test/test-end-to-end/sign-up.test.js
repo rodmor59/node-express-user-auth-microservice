@@ -13,7 +13,7 @@ const signupRoute = '/sign-up'
 
 // ---------------------------- POST /sign-up Tests ----------------------------------------------------
 
-describe('POST /sign-up', () => {
+describe('POST /sign-up (New user sign up)', () => {
 
     beforeAll(async () => {
         /*

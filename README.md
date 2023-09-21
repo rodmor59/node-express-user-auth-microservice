@@ -45,6 +45,7 @@ This project aims to:
 * Signin (Login).
 * Get user data.
 * Edit user data.
+* Change password.
 * Autorization check (Token validation) for usersign operation type.
 
 ### User data
@@ -77,7 +78,6 @@ client must send appropiate tokens to gain access to protected routes.
 * Signup email confirmation.
 * Signup resend email confirmation.
 * Delete user.
-* Change password.
 * Autorization check (Token validation) for email confirmation operation type.
 * Autorization check (Token validation) for password reset operation type.
 * Password send reset code.
@@ -249,6 +249,7 @@ README.md
             ├── sign-in.js
             ├── sign-up.js
             ├── users-get.js
+            ├── users-password-patch.js
             └── users-patch.js
         └── sign-mock-jwt.js
     ├── [setup]
@@ -261,8 +262,10 @@ README.md
         ├── sign-in.test.js
         ├── sign-up.test.js
         ├── users.get.test.js
+        ├── users.password.patch.test.js
         └── users.patch.test.js
     └── [utils]
+        ├── check-password.js
         ├── db-find-users.js
         ├── delay.js
         ├── verif-db-id-type.js

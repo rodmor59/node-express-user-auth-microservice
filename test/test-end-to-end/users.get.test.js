@@ -11,9 +11,9 @@ const delay = require('../utils/delay')
 const deleteUser = require('../teardowns/delete-user') //Teardown
 
 //Consts
-const usersRoute = '/users'
+const route = '/users'
 
-describe('GET /users/:id', () => {
+describe('GET /users/:id (Get user data)', () => {
 
     let mockDataUserId
     let usersGetMockJWT
@@ -58,7 +58,7 @@ describe('GET /users/:id', () => {
     
     test('Rejects when the received user id is not a valid database id pattern', async () => {
         const response = await supertest(app)
-            .get(`${usersRoute}/nodbtype`)
+            .get(`${route}/nodbtype`)
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
@@ -67,7 +67,7 @@ describe('GET /users/:id', () => {
     })
     test('Rejects when authorization token was not received', async () => {
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
@@ -78,7 +78,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = usersGetMockJWT.slice(0, -5) //Minor alteration to the Mock token used in the suite to make it invalid
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -92,7 +92,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWTUserSignin({userId: mockDataUserId}, '0s')
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`) //Expired token sent without alterations
 
         expect(response.status).toBe(401)
@@ -106,7 +106,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWT({userId: mockDataUserId}, '30s') // Token payload doesn't include the opType
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -120,7 +120,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWT({userId: mockDataUserId , opType: true}, '30s') // Token payload includes the opType but it is not a string
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -134,7 +134,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWT({userId: mockDataUserId , opType: 'Wrong op type'}, '30s') // Token payload includes the opType that is a string but it is not the 'signin' opType
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -148,7 +148,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWTUserSignin({missSpelledUserIdProp: mockDataUserId}, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -162,7 +162,7 @@ describe('GET /users/:id', () => {
         const jwtToSend = signMockJWTUserSignin({userId: 'not a document id'}, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
         const response = await supertest(app)
-            .get(`${usersRoute}/${mockDataUserId}`)
+            .get(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
 
         expect(response.status).toBe(401)
@@ -179,7 +179,7 @@ describe('GET /users/:id', () => {
             const jwtToSend = signMockJWTUserSignin({ userId: mockDataSecondUserId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
             const response = await supertest(app)
-                .get(`${usersRoute}/${mockDataUserId}`) //Send as param in the route an id different than the one used to sign the token
+                .get(`${route}/${mockDataUserId}`) //Send as param in the route an id different than the one used to sign the token
                 .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(401) // The token is not authorized to access the user send in the params
@@ -202,7 +202,7 @@ describe('GET /users/:id', () => {
             await deleteUser(usersGetMockDataNotFound.email)
 
             const response = await supertest(app)
-                .get(`${usersRoute}/${mockDataId}`)
+                .get(`${route}/${mockDataId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(404) //Not found
@@ -249,7 +249,7 @@ describe('GET /users/:id', () => {
             
             //Execute test
             const response = await supertest(app)
-                .get(`${usersRoute}/${mockDataId}`)
+                .get(`${route}/${mockDataId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
             expect(response.status).toBe(test.expectedRespStatus)
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -287,7 +287,7 @@ describe('GET /users/:id', () => {
             const previousLastAccessOn = successMockUserObj.lastAccessOn
 
             const response = await supertest(app)
-                .get(`${usersRoute}/${mockUserId}`)
+                .get(`${route}/${mockUserId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
 
             expect(response.status).toBe(200) //Expects an Ok http response

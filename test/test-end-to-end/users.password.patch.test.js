@@ -6,27 +6,29 @@ const createSignedUpUser = require('../fixtures/create-signed-up-user') // Fixtu
 const { signMockJWT, signMockJWTUserSignin } = require('../fixtures/sign-mock-jwt')
 const usersFindDbUtils = require('../utils/db-find-users')
 const { isValidDate } = require('../utils/verif-types')
+const isPasswordValid = require('../utils/check-password')
 const delay = require('../utils/delay')
 const deleteUser = require('../teardowns/delete-user') //Teardown
 
 //Consts
-const route = '/users'
+const route = '/users/password'
 
-describe('PATCH /users/:id (Edit user)', () => {
+describe('PATCH /users/password/:id (Change password)', () => {
 
     let mockDataUserId
-    let usersPatchMockJWT
+    let mockJWT
 
     const { 
-        usersPatchMockData, 
-        usersPatchMockDataSecond,
-        usersPatchMockDataSuccess,
-        usersPatchMockDataNotFound, 
-        usersPatchPendingMockData, 
-        usersPatchLockFailPwdMockData, 
-        usersPatchNotEnbMockData,
-        usersPatchMockDataUpdates
-    } = require('../fixtures/mock-data/users-patch') //Test user data
+        usersPasswordPatchMockData,
+        mockPasswordChange,
+        usersPasswordPatchMockDataSecond,
+        usersPasswordPatchMockDataSuccess,
+        usersPasswordPatchMockDataNotFound, 
+        usersPasswordPatchMockDataWrongPassword,
+        usersPasswordPatchPendingMockData, 
+        usersPasswordPatchLockFailPwdMockData, 
+        usersPasswordPatchNotEnbMockData
+    } = require('../fixtures/mock-data/users-password-patch') //Test user data
 
     beforeAll(async () => {
         /*
@@ -34,18 +36,19 @@ describe('PATCH /users/:id (Edit user)', () => {
         there could be duplicate key errors
         */
         await Promise.all([
-            deleteUser(usersPatchMockData.email),
-            deleteUser(usersPatchMockDataSecond.email),
-            deleteUser(usersPatchMockDataSuccess.email),
-            deleteUser(usersPatchMockDataNotFound.email),
-            deleteUser(usersPatchPendingMockData.email),
-            deleteUser(usersPatchLockFailPwdMockData.email),
-            deleteUser(usersPatchNotEnbMockData.email)
+            deleteUser(usersPasswordPatchMockData.email),
+            deleteUser(usersPasswordPatchMockDataSecond.email),
+            deleteUser(usersPasswordPatchMockDataSuccess.email),
+            deleteUser(usersPasswordPatchMockDataNotFound.email),
+            deleteUser(usersPasswordPatchMockDataWrongPassword.email),
+            deleteUser(usersPasswordPatchPendingMockData.email),
+            deleteUser(usersPasswordPatchLockFailPwdMockData.email),
+            deleteUser(usersPasswordPatchNotEnbMockData.email)
         ])
         // Saves a Mock user to the database
-        mockDataUserId = (await createSignedUpUser(usersPatchMockData,undefined,true))._id.toString()
+        mockDataUserId = (await createSignedUpUser(usersPasswordPatchMockData,undefined,true))._id.toString()
         // Signs a token with the new user id
-        usersPatchMockJWT = signMockJWTUserSignin(
+        mockJWT = signMockJWTUserSignin(
             {userId: mockDataUserId},
             '2m' //More than enough time to execute this suite of tests
         ) 
@@ -53,14 +56,14 @@ describe('PATCH /users/:id (Edit user)', () => {
 
     afterAll(async () => {
         // Deletes the mock user from the database
-        await deleteUser(usersPatchMockData.email)
+        await deleteUser(usersPasswordPatchMockData.email)
     })
     
     test('Rejects when the received user id is not a valid database id pattern', async () => {
         const response = await supertest(app)
             .patch(`${route}/nodbtype`)
-            .set('authorization', `Bearer ${usersPatchMockJWT}`)
-            .send(usersPatchMockDataUpdates)
+            .set('authorization', `Bearer ${mockJWT}`)
+            .send(mockPasswordChange)
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
@@ -71,7 +74,7 @@ describe('PATCH /users/:id (Edit user)', () => {
     test('Rejects when no body is received', async () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
-            .set('authorization', `Bearer ${usersPatchMockJWT}`)
+            .set('authorization', `Bearer ${mockJWT}`)
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
@@ -83,72 +86,72 @@ describe('PATCH /users/:id (Edit user)', () => {
     test.each([
         {
             mockData: {
-                //First name prop is missing
-                lastName: usersPatchMockDataUpdates.lastName,
-                receiveEmails: usersPatchMockDataUpdates.receiveEmails
+                newPassword: mockPasswordChange.newPassword, // Previous password missing
+                confirmNewPassword: mockPasswordChange.confirmNewPassword
             },   
-            testDescription: 'Rejects when the first name is missing',
+            testDescription: 'Rejects when the previous password is missing',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
-                firstName: true, //First name prop is set to a non-string value
+                ...mockPasswordChange,
+                currentPassword: true, // Set no non-string value
             },   
-            testDescription: 'Rejects when the first name is not a string',
+            testDescription: 'Rejects when the previous password is not a string',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
-                firstName: 'R*ich*ar~d==++', //First name is set to contain invalid characters for a name
+                currentPassword: mockPasswordChange.currentPassword, // new password missing
+                confirmNewPassword: mockPasswordChange.confirmNewPassword
             },   
-            testDescription: 'Rejects when the first name format is invalid',
+            testDescription: 'Rejects when the new password is missing',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                firstName: usersPatchMockDataUpdates.firstName, //Last name prop is missing
-                receiveEmails: usersPatchMockDataUpdates.receiveEmails
+                ...mockPasswordChange,
+                newPassword: true, // Set no non-string value
             },   
-            testDescription: 'Rejects when the the last name is missing',
+            testDescription: 'Rejects when the new password is not a string',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
-                lastName: true, //Last name prop set to a non-string value
+                ...mockPasswordChange,
+                newPassword: '1234567', // Weak password
+                confirmNewPassword: '1234567'
             },   
-            testDescription: 'Rejects when the last name is not a string',
+            testDescription: 'Rejects when the password format is invalid (Not strong enough)',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
-                lastName: 'B*r~o123wn', //Last name prop set to include invalid characters for a name
+                currentPassword: mockPasswordChange.currentPassword,
+                newPassword: mockPasswordChange.newPassword, // confirm new password is missing
             },   
-            testDescription: 'Rejects when the last name format is invalid',
+            testDescription: 'Rejects when the confirm new password is missing',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                firstName: usersPatchMockDataUpdates.firstName,
-                lastName: usersPatchMockDataUpdates.lastName, //receiveEmails prop is missing
+                ...mockPasswordChange,
+                confirmNewPassword: true, // Set no non-string value
             },   
-            testDescription: 'Rejects when the field "receiveEmails" is missing',
+            testDescription: 'Rejects when the confirm new password is not a string',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
-                receiveEmails: 'Not a boolean' //receiveEmails prop set to a non-boolean value
+                ...mockPasswordChange,
+                confirmNewPassword: 'difPassword1*' // Password is secure but doens not match the new password
             },   
-            testDescription: 'Rejects when the field "receiveEmails" is not a boolean',
+            testDescription: 'Rejects when confirm new password does not match new password',
             expectedRespStatus: 400
         },
         {
             mockData: {
-                ...usersPatchMockDataUpdates,
+                ...mockPasswordChange,
                 notAllowed: true // This field is not allowed by the sign-in schema
             },
             testDescription: 'Rejects when receiving a field not specified in the schema',
@@ -157,7 +160,7 @@ describe('PATCH /users/:id (Edit user)', () => {
     ])('$testDescription', async (test) => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
-            .set('authorization', `Bearer ${usersPatchMockJWT}`)
+            .set('authorization', `Bearer ${mockJWT}`)
             .send(test.mockData)
         expect(response.status).toBe(test.expectedRespStatus)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -171,7 +174,7 @@ describe('PATCH /users/:id (Edit user)', () => {
     test('Rejects when authorization token was not received', async () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
         expect(response.status).toBe(400)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
             status: expect.any(String),
@@ -179,12 +182,12 @@ describe('PATCH /users/:id (Edit user)', () => {
         })
     })
     test('Rejects when token is invalid', async () => {
-        const jwtToSend = usersPatchMockJWT.slice(0, -5) //Minor alteration to the Mock token used in the suite to make it invalid
+        const jwtToSend = mockJWT.slice(0, -5) //Minor alteration to the Mock token used in the suite to make it invalid
 
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -199,7 +202,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`) //Expired token sent without alterations
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -214,7 +217,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -229,7 +232,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -244,7 +247,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -259,7 +262,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -274,7 +277,7 @@ describe('PATCH /users/:id (Edit user)', () => {
         const response = await supertest(app)
             .patch(`${route}/${mockDataUserId}`)
             .set('authorization', `Bearer ${jwtToSend}`)
-            .send(usersPatchMockDataUpdates)
+            .send(mockPasswordChange)
 
         expect(response.status).toBe(401)
         expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -285,14 +288,14 @@ describe('PATCH /users/:id (Edit user)', () => {
     test('Rejects when user id of the token payload is different from the id of the params of the called route', async () => {
         try {
             // Create a second signed up user and get its user id
-            const mockDataSecondUserId = (await createSignedUpUser(usersPatchMockDataSecond, undefined, true))._id.toString()
+            const mockDataSecondUserId = (await createSignedUpUser(usersPasswordPatchMockDataSecond, undefined, true))._id.toString()
             // Sign a token with this user id, which is different than the id of mockDataUser
             const jwtToSend = signMockJWTUserSignin({ userId: mockDataSecondUserId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
 
             const response = await supertest(app)
                 .patch(`${route}/${mockDataUserId}`) //Send as param in the route an id different than the one used to sign the token
                 .set('authorization', `Bearer ${jwtToSend}`)
-                .send(usersPatchMockDataUpdates)
+                .send(mockPasswordChange)
 
             expect(response.status).toBe(401) //This is a bad request, the user is requested with a token not signed with it's id
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -301,22 +304,22 @@ describe('PATCH /users/:id (Edit user)', () => {
             })
         }
         finally {
-            await deleteUser(usersPatchMockDataSecond.email)
+            await deleteUser(usersPasswordPatchMockDataSecond.email)
         }
     })
     test('Rejects when user id doesn’t match with a user stored in the database (although the token and id are valid)', async () => {
         try {
             // Create a signed up user and get its user id
-            const mockDataId = (await createSignedUpUser(usersPatchMockDataNotFound, undefined, true))._id.toString()
+            const mockDataId = (await createSignedUpUser(usersPasswordPatchMockDataNotFound, undefined, true))._id.toString()
             // Sign a token with this user id, which is different than the id of mockDataUser
             const jwtToSend = signMockJWTUserSignin({ userId: mockDataId }, '30s') //Note: The expiration time is greater to avoid rejections for this cause
             // Delete the user from the database
-            await deleteUser(usersPatchMockDataNotFound.email)
+            await deleteUser(usersPasswordPatchMockDataNotFound.email)
 
             const response = await supertest(app)
                 .patch(`${route}/${mockDataId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
-                .send(usersPatchMockDataUpdates)
+                .send(mockPasswordChange)
 
             expect(response.status).toBe(404) //Not found
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -325,29 +328,42 @@ describe('PATCH /users/:id (Edit user)', () => {
             })
         }
         finally {
-            await deleteUser(usersPatchMockDataSecond.email)
+            await deleteUser(usersPasswordPatchMockDataSecond.email)
         }
     })
 
-    // ----------------------------- Grouping of user non-enabled status tests -------------------------------------------------
+    // ----------------------------- Grouping of wrong password and user not enabled status --------------------------------
     test.each([
         {
-            mockData: usersPatchPendingMockData,
+            mockData: usersPasswordPatchMockDataWrongPassword,
+            mockUpdate: {
+                ...mockPasswordChange,
+                currentPassword: 'wrongPassword1*' // Current password is wrong
+            },
+            userStatus: undefined,
+            testDescription: 'Rejects the current password is incorrect (wrong current password)',
+            expectedRespStatus: 401, //The application uses a custom http response code
+        },
+        {
+            mockData: usersPasswordPatchPendingMockData,
+            mockUpdate: mockPasswordChange,
+            userStatus: userStatus.pending,
             testDescription: 'Rejects when the user is in pending status',
             expectedRespStatus: 490, //The application uses a custom http response code
-            userStatus: userStatus.pending
         },
         {
-            mockData: usersPatchLockFailPwdMockData,
+            mockData: usersPasswordPatchLockFailPwdMockData,
+            mockUpdate: mockPasswordChange,
+            userStatus: userStatus.lockedFailedLogin,
             testDescription: 'Rejects when the user is locked due to multiple failed signin attemps',
             expectedRespStatus: 491, //The application uses a custom http response code
-            userStatus: userStatus.lockedFailedLogin
         },
         {
-            mockData: usersPatchNotEnbMockData,
+            mockData: usersPasswordPatchNotEnbMockData,
+            mockUpdate: mockPasswordChange,
+            userStatus: 'Any status different from enabled',
             testDescription: 'Rejects when the user is a non-enabled status (any status different than enabled',
             expectedRespStatus: 403, //The application uses a custom http response code
-            userStatus: 'Any status different from enabled'
         },
     ])('$testDescription', async (test) => {
         try {
@@ -364,7 +380,7 @@ describe('PATCH /users/:id (Edit user)', () => {
             const response = await supertest(app)
                 .patch(`${route}/${mockDataId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
-                .send(usersPatchMockDataUpdates)
+                .send(test.mockUpdate)
             expect(response.status).toBe(test.expectedRespStatus)
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
                 status: expect.any(String),
@@ -397,7 +413,7 @@ describe('PATCH /users/:id (Edit user)', () => {
             /*
                 Fixture. Tests insert their own mock data in the database, since it requires users with different statuses
                 */
-            const createdUser = (await createSignedUpUser(usersPatchMockDataSuccess, undefined, true))
+            const createdUser = (await createSignedUpUser(usersPasswordPatchMockDataSuccess, undefined, true))
             const mockDataId = createdUser._id.toString()
             const previousLastAccessOn = createdUser.lastAccessOn
             const previousUserDataUpdatedOn = createdUser.userDataUpdatedOn
@@ -407,7 +423,7 @@ describe('PATCH /users/:id (Edit user)', () => {
             const response = await supertest(app)
                 .patch(`${route}/${mockDataId}`)
                 .set('authorization', `Bearer ${jwtToSend}`)
-                .send(usersPatchMockDataUpdates)
+                .send(mockPasswordChange)
 
             expect(response.status).toBe(200) //Expects an Ok http response
             expect(response.body).toMatchObject({ //This assertion verifies that the response in case of error is properly formed (In this case that it has an status and message props and they are strings)
@@ -415,39 +431,34 @@ describe('PATCH /users/:id (Edit user)', () => {
                 message: expect.any(String),
             })
 
-            // Assert that the user data was updated successfully, by checking it at the database
-            const updatedUser = await usersFindDbUtils.userFindById(mockDataId)
-            expect(updatedUser.firstName).toBe(usersPatchMockDataUpdates.firstName)
-            expect(updatedUser.lastName).toBe(usersPatchMockDataUpdates.lastName)
-            expect(updatedUser.receiveEmails).toBe(usersPatchMockDataUpdates.receiveEmails)
-
-            // Get updated user from the database
-            const userToModify = await usersFindDbUtils.userFindById(mockDataId)
-            // Assert that lastAccessDateOn was updated
-            // First, assert that the lastAccessOn is still a date type
-            let isDate = isValidDate(userToModify.lastAccessOn)
-            expect(isDate).toBeTruthy()
-            // Check that the last access date is updated
-            const lastAccessDateWasUpdated = (userToModify.lastAccessOn > previousLastAccessOn)
-            expect(lastAccessDateWasUpdated).toBeTruthy()
-
             /* 
-            Delay a second to give a chance for the user's userDataUpdatedOn  and lastAccessOn data 
+            Delay a second to give a chance for the user's userDataUpdatedOn and lastAccessOn data 
             to update in the database, since these dates updates are asyncronous
             */
             await delay(delayTime)
 
-            // Assert that userDataUpdatedOn was updated
-            // First, assert that the userDataUpdatedOn is still a date type
-            isDate = isValidDate(userToModify.userDataUpdatedOn)
+            // Assert that the user's password was changed successfully
+            const updatedUser = await usersFindDbUtils.userFindById(mockDataId)
+            // Checkpassword
+            expect(isPasswordValid(mockPasswordChange.newPassword, updatedUser.password)).toBeTruthy()
+
+            // Assert that lastAccessDateOn was updated
+            // Assert that the lastAccessOn is still a date type
+            let isDate = isValidDate(updatedUser.lastAccessOn)
+            expect(isDate).toBeTruthy()
+            // Asert that userDataUpdatedOn is still a date type
+            isDate = isValidDate(updatedUser.userDataUpdatedOn)
             expect(isDate).toBeTruthy()
             // Check that the last access date is updated
-            const userDataUpdatedOnWasUpdated = (userToModify.userDataUpdatedOn > previousUserDataUpdatedOn)
+            const lastAccessDateWasUpdated = (updatedUser.lastAccessOn > previousLastAccessOn)
+            expect(lastAccessDateWasUpdated).toBeTruthy()            
+            // Check that the last access date is updated
+            const userDataUpdatedOnWasUpdated = (updatedUser.userDataUpdatedOn > previousUserDataUpdatedOn)
             expect(userDataUpdatedOnWasUpdated).toBeTruthy()
 
         } finally {
             // Teardown Mock data regardless of test result
-            await deleteUser(usersPatchMockDataSuccess.email)
+            await deleteUser(usersPasswordPatchMockDataSuccess.email)
         }
     })
 })
