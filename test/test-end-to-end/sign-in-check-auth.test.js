@@ -12,7 +12,7 @@ const deleteUser = require('../teardowns/delete-user') //Teardown
 //Consts
 const route = '/sign-in/check-auth'
 
-describe('GET /sign-in/check-auth', () => {
+describe('GET /sign-in/check-auth (Verify signin token)', () => {
 
     let mockDataUserId
     let signinCheckAuthMockJWT

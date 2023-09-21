@@ -1,13 +1,16 @@
 const userDBService = require('../services/dbservices/user')
-const appParameters = require('../config/parameters')
+const encryptPwd = require('../utils/encrypt-pwd')
+const sendError = require('../utils/res-error')
+const { messages } = require('../config/parameters')
 const { statusTxt } = require('../config/parameters')
 
 // Const messages
 const successMessageUserGet = 'User access successfully, attached is the requested user data'
 const successMessageUserUpdate = 'User updated successfully'
+const successMessageChangePassword = 'user password changed successfully'
 
 // This function assumes that al authorization checks has been performed by previous functions in the pipeline
-const usersGet = (req, res, next) => {
+const get = (req, res, next) => {
     try {
         /*
         Destructure the request object, extracting the prop user, which should have been attached 
@@ -20,7 +23,7 @@ const usersGet = (req, res, next) => {
             user was not received in the request object, since this function executes after 
             a middleware that is supposed to attach it, an internal error must have occured
             */
-            return res.status(500).json({error: appParameters.messages.msgInternalError})
+            return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res)
         }
 
         /* Prepare the response user object to send. This user object must not contain the encrypted password, which should never be
@@ -50,12 +53,12 @@ const usersGet = (req, res, next) => {
     }
     catch (error) {
         console.error(error)
-        next({ error: error, message: appParameters.messages.msgErrSendToClient })
+        next({ error: error, message: messages.msgErrSendToClient })
     }
 }
 
 // This function assumes that al authorization checks has been performed by previous functions in the pipeline
-const usersUpdate = async (req, res, next) => {
+const update = async (req, res, next) => {
     try {
         /*
         Destructure the request object, extracting the prop user, which should have been attached 
@@ -68,7 +71,7 @@ const usersUpdate = async (req, res, next) => {
             user was not received in the request object, since this function executes after 
             a middleware that is supposed to attach it, an internal error must have occured
             */
-            return res.status(500).json({error: appParameters.messages.msgInternalError})
+            return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res)
         }
 
         // Set the data to update in a const
@@ -93,11 +96,53 @@ const usersUpdate = async (req, res, next) => {
     }
     catch (error) {
         console.error(error)
-        next({ error: error, message: appParameters.messages.msgErrSendToClient })
+        next({ error: error, message: messages.msgErrSendToClient })
+    }
+}
+
+// This function assumes that al authorization checks has been performed by previous functions in the pipeline
+const changePassword = async (req, res, next) => {
+    try {
+        /*
+        Destructure the request object, extracting the prop user, which should have been attached 
+        by the previous procedure in the pipeline.
+        */
+        const { user } = req
+
+        if (!user) {
+            /*
+            user was not received in the request object, since this function executes after 
+            a middleware that is supposed to attach it, an internal error must have occured
+            */
+            return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res)
+        }
+
+        /* Update the user in the database.
+        New password must be encrypted.
+        This update must include the lastAccessOn and userDataUpdatedOn dates.
+        */
+        const timeStamp = new Date()
+        await userDBService.updateOne({ _id: user._id }, {
+            password: (await encryptPwd(req.body.newPassword)),
+            userDataUpdatedOn: timeStamp,
+            lastAccessOn: timeStamp
+        })
+        
+        //Send user to the client
+        res.status(200).json({
+            status: statusTxt.statusCompleted,
+            message: successMessageChangePassword,
+        })
+
+    }
+    catch (error) {
+        console.error(error)
+        next({ error: error, message: messages.msgErrSendToClient })
     }
 }
 
 module.exports = {
-    usersGet,
-    usersUpdate
+    get,
+    update,
+    changePassword
 }

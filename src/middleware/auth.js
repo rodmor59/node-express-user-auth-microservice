@@ -2,6 +2,7 @@ const passport = require('passport')
 
 const { getUserById } = require('../services/users')
 const checkUserAuthStatus = require('../services/auth/check-user-auth-status')
+const checkUserPassword = require('../services/auth/check-user-password')
 const { updateLastAccessOn } = require('../utils/user-updates')
 const { statusTxt, messages } = require('../config/parameters')
 const sendError = require('../utils/res-error')
@@ -108,4 +109,28 @@ module.exports = {
             })(req, res, next)
         }
     },
+    /* passwordAuthMiddleware: Middleware that checks the password only, must be executed after jwtAuthMiddleware to
+    receive the user to check password against.
+    */
+    passwordAuthMiddleware: async (req, res, next) => {
+        // Destructure the current password from the req body
+        const { currentPassword } = req.body 
+
+        // Destructure the user from the req object (Previous step is supposed to attach the user to the req object)
+        const { user } = req
+
+        if (!currentPassword || !user) { // An internal error must have ocurred since this function is supposed to receive these fields in the req object
+            return sendError(500, statusTxt.statusFailed, messages.msgInternalError, null, res) // Wrong password
+        }
+
+        // Checks password
+        const resultPasswordCheck = await checkUserPassword(currentPassword, user)
+        if (!resultPasswordCheck.success) {
+            updateLastAccessOn(user) // Checking the password here doesn't increase failed login attempts, since user is already logged in.
+            return sendError(resultPasswordCheck.httpStatusCode, statusTxt.statusFailed, resultPasswordCheck.payload.message, null, res)
+        }
+
+        // Proceeds to the next function in the pipeline
+        next()
+    }
 }

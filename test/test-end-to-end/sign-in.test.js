@@ -23,7 +23,7 @@ const signinRoute = '/sign-in'
 
 // ---------------------------- POST /sign-up Tests ----------------------------------------------------
 
-describe('POST /sign-in', () => {
+describe('POST /sign-in (User signin - Login)', () => {
 
     beforeAll(async () => {
         /*

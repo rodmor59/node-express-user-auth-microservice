@@ -44,7 +44,7 @@ module.exports = {
         receiveEmails: true //All props have values in the expected format
     },
     usersPatchNotEnbMockData: {
-        email: 'sersPatchNotEblMockData', //Email is different from others used on other test to avoid database conflicts
+        email: 'usersPatchNotEblMockData', //Email is different from others used on other test to avoid database conflicts
         password: 'pwdMock11*',
         firstName: 'First Name',
         lastName: 'Last Name',
