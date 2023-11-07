@@ -1,7 +1,7 @@
 # Node.js Express User Authorization Microservice
 Welcome to the Node.js Express User Authorization Microservice! This project is a work in progress. Once completed, it will provide comprehensive functionality for managing user access, including signup, sign-in, user profile editing and deletion, authorization checks, and password reset. 
 
-Stay tuned for updates as we continue to enhance and refine this microservice. Also, feel free to explore the code and don't hesitate to reach out with any questions or feedback you may have!
+Stay tuned for updates as we continue to enhance and refine this microservice. Also, feel free to explore the code and don't hesitate to reach out with any questions or feedback!
 
 <!--
 (#table-of-contents)
@@ -29,9 +29,9 @@ This project aims to:
 
 * Provide a standard Node.js Express microservice with a comprehensive set of features for managing user access.
 * Address the common need for user authentication in almost all applications, following industry-standard project organization practices, emphasizing separation of concerns, modularity, and code reusability.
-* Save developers time and effort by eliminating the need to develop user authentication from scratch. Developers can simply clone or fork this repository and integrate it into their projects.
+* Save developers time and effort by eliminating the need to develop user authentication from scratch. Developers can clone or fork this repository and integrate it into their projects.
 * Serve as a learning resource for developing RESTful APIs to manage user authentication, incorporating cutting-edge technologies such as password encryption, Jason Web Tokens (JWT), and Passport.js authentication.
-* Provide guidance on developing automated procedures for user signup, sign-in, account confirmation, password resets (Forgot password) through email, and more.
+* Guide developing automated procedures for user signup, sign-in, account confirmation, password resets (Forgot password) through email, and more.
 
 <!--
 (#features)
@@ -42,30 +42,29 @@ This project aims to:
 ### Endpoints
 
 * Signup.
-* Signin (Login).
+* Sign-in (Login).
 * Get user data.
 * Edit user data.
 * Change password.
-* Autorization check (Token validation) for usersign operation type.
+* Authorization check (Token validation) for user sign operation type.
 
 ### User data
 
-* Passwords are hash encrypted prior to saving user data.
-* User documents register the number of failed login attempts, when a threshold is reached the user changed status to locked.
+* Passwords are hash-encrypted before saving user data.
+* User documents record the number of failed login attempts; when a threshold is reached, the user changes status to locked.
 * The API records the following dates for user documents: date of creation, date of last user data update, last access date, and last successful login date.
 
 ### Technical features
 
-* Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client send login and password once. Then, they can use the token for authentication until it expires).
-* Route protection with Passport, with a JWT token strategy. JWT Tokens are acquired through signin (which uses a passport local strategy), at signup (for email verification), when requesting a password reset, or other operation. Afterward, the 
-client must send appropiate tokens to gain access to protected routes.
-* Operation types are signed on tokens such as signin, signup signup verification (email confirmation) and password resets. As a result, tokens issued for one purpose cannot be used for another.
-* Schama based request data validation with middleware functions that execute before handlers.
-* The endpoints follows a route, handler, service, and DB service structure.
+* Sigin with a passport.js local strategy, issuing a JWT Token for further authentication (client sends login and password once. Then, they can use the token for authentication until it expires).
+* Route protection with Passport, with a JWT token strategy. JWT Tokens are acquired through sign-in (which uses a passport local strategy), at signup (for email verification), when requesting a password reset, or other operations. Afterward, the client must send appropriate tokens to gain access to protected routes.
+* Operation types are signed-on tokens such as sign-in, signup verification (email confirmation) and password resets. As a result, tokens issued for one purpose cannot be used for another.
+* Schema-based request data validation with middleware functions that execute before handlers.
+* The endpoints follow a route, handler, service, and DB service structure.
 * Encapsulated database configuration, modeling and access functionality, separated from other programming logic.
 * Environment variables file segregated from the API Source code.
 * Testing configuration and tests with Jest. It also includes HTTP server testing with the "supertest" library.
-* Include testing to ensure that user data sent to data creation and modification endpoints is correctly saved in the database. To this end, the test access the database directly and compare saved data against expected results. Among these database test are data comparison tests, user log dates updates and user status updates.
+* Include testing to ensure that user data sent to data creation and modification endpoints is correctly saved in the database. To this end, the test accesses the database directly and compares saved data against expected results. Among these database tests are data comparison tests, user log date updates and user status updates.
 
 <!--
 (#Planned Features)
@@ -78,8 +77,8 @@ client must send appropiate tokens to gain access to protected routes.
 * Signup email confirmation.
 * Signup resend email confirmation.
 * Delete user.
-* Autorization check (Token validation) for email confirmation operation type.
-* Autorization check (Token validation) for password reset operation type.
+* Authorization check (Token validation) for email confirmation operation type.
+* Authorization check (Token validation) for password reset operation type.
 * Password send reset code.
 * Password reset.
 
@@ -103,14 +102,14 @@ client must send appropiate tokens to gain access to protected routes.
 
 ### Libraries Description
 
-- **passport**: Flexible and modular authentication middleware for Node.js that provides a simple and customizable way to handle user authentication in web applications. This project uses a local strategy for user signin which sends a JWT token to the client. Aftewards, a JWT strategy is used to authenticate users with a valid signin JWT Token.
-- **jsonwebtoken:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user signin, after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
+- **Passport**: Flexible and modular authentication middleware for Node.js that provides a simple and customizable way to handle user authentication in web applications. This project uses a local strategy for user sign-in, which sends a JWT token to the client. Afterward, a JWT strategy is used to authenticate users with a valid sign-in JWT Token.
+- **JSON web token:** Generate and verify JSON Web Tokens (JWTs) for authentication and authorization purposes in web applications. In this microservice, tokens are issued at user sign-in after validating credentials. As a result, users authenticate only once and then use tokens to access protected routes until the token expires.
 - **bcrypt:** Hashing passwords securely in JavaScript (Used in this project at user signup).
-- **Joi:** Schema validation library for enforcing constraints on JavaScript objects. Used to apply data validations ass middleware, before executing route handlers.
+- **Joi:** Schema validation library for enforcing constraints on JavaScript objects. They are used to apply data validations as middleware before executing route handlers.
 - **joi-objectid:** A Joi extension that adds support for validating MongoDB ObjectIds.
 - **Mongoose:** Used for modeling and interacting with MongoDB databases.
 - **dotenv:** Loading environment variables from a .env file in Node.js applications. (The Database URI is loaded this way)
-- **Supertest:** Testing Node.js HTTP servers by making HTTP requests and asserting responses, withput having to start an http server (Used in conjunction with Jest for testing)
+- **Supertest:** Testing Node.js HTTP servers by making HTTP requests and asserting responses, without having to start an HTTP server (Used in conjunction with Jest for testing)
 - **esLint:** JavaScript linter for identifying code quality issues and enforcing coding standards. Used to stream software development.
 
 ### Dependencies
@@ -133,7 +132,7 @@ Test are written with Jest, [here](./test/).
 - Install npm.
 - Install MongoDB (Alternatively, you may use a MongoDB Cloud Service, such as MongoDB Atlas).
 
-Note: While this codebase utilizes MongoDB, you can easily adapt it to work with another database system. The database  [configuration](./src/config/database.js), [models](./src/models) and [database access services](./src/services/dbservices) are encapsulated, allowing you to modify these files to support a different database without needing to change the utility, services, middleware, and handlers code. This flexibility becomes increasingly valuable as your applications scale in size.
+**Note:** While this codebase utilizes MongoDB, you can easily adapt it to work with another database system. The database  [configuration](./src/config/database.js), [models](./src/models) and [database access services](./src/services/dbservices) are encapsulated, allowing you to modify these files to support a different database without needing to change the utility, services, middleware, and handlers code. This flexibility becomes increasingly valuable as your applications scale in size.
 
 ### Setup Procedure
 
@@ -145,13 +144,13 @@ npm install
 
 ### Environment variables file (.env)
 
-before running this project, you need to create an .env file and add the following environment variables.
+Before running this project, you must create a .env file and add the following environment variables.
 
 **`APP_PORT`**  
 Listening port for the Node Express Rest API (e.g., 4000).
 
 **`DB_URI`**  
-Database URL or URI. If you are using a localhost installation of MongoDB, you may enter a localhost URL. If you are using a MongoDB cloud service, you must specify the URI provided by the service provider. Here are a couple of examples:
+Database URL or URI. If you use a localhost installation of MongoDB, you may enter a localhost URL. If you are using a MongoDB cloud service, you must specify the URI provided by the service provider. Here are a couple of examples:
 
 Local MongoDB URL:  
 `http://localhost:27017/<Name of Database>`
@@ -160,10 +159,10 @@ Cloud Atlas MongoDB URI:
 `mongodb+srv://<Cloud Atlas database username>:<Cloud Atlas database password@appcluster0.ckkhqvp.mongodb.net/<Name of the database>?retryWrites=true&w=majority`
 
 **`JWT_SECRET`**
-Random hex secret key required to issue the JWT Tokens for user signin, email confirmation, passwords resets or any other
+A random hex secret key is required to issue the JWT Tokens for user sign-in, email confirmation, password resets or any other
 operation (64 characters or more recommended).
 
-This project includes a .env.template file that you may fill and then rename to .env.
+This project includes a .env.template file that you may fill and rename to .env.
 
 <!--
 (#instructions-for-testing-and-starting-the-REST-API)
@@ -278,7 +277,7 @@ README.md
 
 ## Project Status
 
-Project is: In Progress. 
+The project is **In progress**.
 
 Feel free to make suggestions on how to improve the project.
 
